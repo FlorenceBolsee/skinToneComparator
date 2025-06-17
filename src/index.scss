@@ -1,0 +1,82 @@
+@import url('./styles/variables.scss');
+
+* {
+	padding: 0;
+	margin: 0;
+	box-sizing: border-box;
+}
+
+button {
+	cursor: pointer;
+}
+
+body {
+	background: var(--color-surface);
+}
+
+#root {
+	--color-height: 76px;
+	--swatch-width: 160px;
+	font-family: 'Lato', helvetica, arial, sans-serif;
+	color: var(--color-text);
+	display: flex;
+	justify-content: center;
+}
+
+.app {
+	max-width: calc(var(--swatch-width) * 2 + 50px);
+}
+
+.cyan,
+.magenta,
+.yellow,
+.black,
+.white {
+	display: inline-block;
+	position: relative;
+	padding-left: 12px;
+
+	&::after {
+		content: '';
+		display: inline-block;
+		position: absolute;
+		width: var(--gap);
+		height: var(--gap);
+		border-radius: 6px;
+		left: 0;
+		top: 50%;
+		transform: translateY(-50%);
+		border: 1px solid #999;
+	}
+}
+
+.cyan::after {
+	background-color: cyan;
+}
+
+.magenta::after {
+	background-color: #ff8eff;
+}
+
+.yellow::after {
+	background-color: yellow;
+}
+
+.black::after {
+	background-color: black;
+	color: white;
+}
+
+.white::after {
+	background-color: white;
+}
+
+.description {
+	margin: var(--gap);
+	font-size: 13px;
+}
+
+#root h1 {
+	margin: var(--gap);
+	font-size: var(--text-large);
+}

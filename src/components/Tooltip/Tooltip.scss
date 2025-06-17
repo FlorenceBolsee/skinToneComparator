@@ -1,0 +1,28 @@
+.tooltip {
+	display: inline-flex;
+	flex-direction: column;
+	background-color: var(--color-overlay);
+	border: var(--border);
+	border-radius: var(--border-radius);
+	position: absolute;
+	z-index: 2;
+	top: calc(100% + var(--gap));
+	right: 0;
+	padding: 16px;
+	font-size: var(--text-medium);
+	font-weight: initial;
+	max-width: 330px;
+	box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.3);
+}
+
+.tooltip-trigger {
+	border: none;
+	display: inline-flex;
+	cursor: pointer;
+	margin-left: var(--gap);
+
+	svg {
+		fill: var(--color-text);
+		margin-left: var(--gap);
+	}
+}

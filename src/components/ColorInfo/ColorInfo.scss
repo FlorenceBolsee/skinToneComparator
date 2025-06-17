@@ -1,0 +1,25 @@
+.color-info {
+	display: flex;
+	flex-flow: column;
+	gap: 4px;
+
+	h3 {
+		margin-bottom: 4px;
+
+		&:not(:first-child) {
+			margin-top: 4px;
+		}
+	}
+
+	p {
+		margin-bottom: 4px;
+	}
+
+	ul {
+		list-style: none;
+	}
+}
+
+.color-line:not(:last-child) {
+	margin-bottom: 4px;
+}

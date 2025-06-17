@@ -1,0 +1,27 @@
+.color-swatch {
+	display: flex;
+	flex-flow: row wrap;
+	align-items: flex-end;
+	gap: 4px var(--padding);
+	max-width: var(--swatch-width);
+	flex-basis: 50%;
+}
+
+.color-name {
+	flex-basis: 100%;
+}
+
+.color-preview {
+	flex-basis: 80px;
+	height: var(--color-height);
+	border-radius: var(--border-radius);
+	background: var(--swatch, #ffffff);
+	border: 1px solid var(--color-overlay);
+}
+
+.color-levels {
+	display: flex;
+	align-items: flex-end;
+	gap: var(--gap);
+	min-height: var(--color-height);
+}

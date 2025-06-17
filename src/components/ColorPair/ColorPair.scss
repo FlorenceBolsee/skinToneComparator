@@ -1,0 +1,26 @@
+.color-pair {
+	display: inline-flex;
+	gap: var(--padding);
+	flex-flow: row wrap;
+	background: var(--color-mantle);
+	padding: var(--padding);
+	border-radius: var(--border-radius);
+	width: calc(var(--swatch-width) * 2 + 30px);
+	position: relative;
+
+	h2 {
+		display: inline-block;
+		flex-basis: 100%;
+		padding-right: 30px;
+		position: relative;
+	}
+}
+
+.color-delete {
+	position: absolute;
+	top: var(--padding);
+	right: var(--padding);
+	border: none;
+	padding: 0;
+	z-index: 1;
+}

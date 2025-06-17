@@ -1,0 +1,38 @@
+.color-input {
+	margin: var(--gap);
+	display: flex;
+	flex-flow: column;
+	gap: 4px;
+
+	input {
+		border-radius: 4px;
+		border: var(--border);
+		height: 24px;
+		padding: 0 var(--gap);
+	}
+
+	label:not(first-of-type) {
+		margin-top: 4px;
+	}
+
+	button {
+		margin-top: var(--gap);
+		padding: var(--button-padding);
+		border-radius: 4px;
+		border: none;
+		background: var(--color-primary);
+		color: var(--color-overlay);
+		transition: background 0.2s;
+
+		&:hover,
+		&:focus-visible,
+		&.active {
+			background: var(--color-hover);
+		}
+
+		&:disabled {
+			pointer-events: none;
+			opacity: 0.7;
+		}
+	}
+}

@@ -1,0 +1,27 @@
+@property --bar-height {
+	syntax: '<number>';
+	initial-value: 0;
+	inherits: false;
+}
+
+.color-bar {
+	display: flex;
+	gap: 4px;
+	flex-direction: column;
+	align-items: center;
+	font-size: var(--text-small);
+	text-align: center;
+	border-radius: 2px;
+	overflow: hidden;
+}
+
+.color-bar-background {
+	height: calc((60 - var(--bar-height)) * 1px);
+	transition: 1s all;
+}
+
+.color-bar-foreground {
+	height: calc(var(--bar-height) * 1px);
+	transform: translateY(calc((60 - var(--bar-height)) * 1px));
+	transition: 1s all;
+}
