@@ -12,23 +12,23 @@ export const generateTone = () => {
 export const hueValues = Array.from({ length: 24 }, (_, idx) => 13 + idx);
 export const toneTable = [
 	{
-		lightness: 20,
+		lightness: 28,
 		saturationValues: arrayRange(38, 80),
 	},
 	{
-		lightness: 45,
-		saturationValues: arrayRange(36, 75),
+		lightness: 42,
+		saturationValues: arrayRange(38, 75),
 	},
 	{
-		lightness: 65,
-		saturationValues: arrayRange(34, 70),
+		lightness: 56,
+		saturationValues: arrayRange(34, 65),
 	},
 	{
-		lightness: 72,
-		saturationValues: arrayRange(32, 65),
+		lightness: 70,
+		saturationValues: arrayRange(32, 62),
 	},
 	{
-		lightness: 85,
+		lightness: 84,
 		saturationValues: arrayRange(30, 60),
 	},
 ];

@@ -33,6 +33,13 @@
 	gap: var(--gap);
 	align-items: flex-end;
 	z-index: 2;
+
+	button {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		z-index: 1;
+	}
 }
 
 .picker-cover {
@@ -42,14 +49,4 @@
 	bottom: 0;
 	right: 0;
 	background: rgba(255, 255, 255, 0.5);
-
-	button {
-		border-radius: 20px;
-		font-size: var(--text-small);
-		height: 30px;
-		width: 30px;
-		display: flex;
-		justify-content: center;
-		align-items: center;
-	}
 }

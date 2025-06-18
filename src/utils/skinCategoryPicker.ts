@@ -35,8 +35,8 @@ const UNDERTONES_THRESHOLDS = {
 		cool: { min: 0.65, max: 1, label: COOL },
 	},
 	olive: {
-		warm: { min: 0, max: 0.39, label: WARM },
-		neutral: { min: 0.39, max: 0.45, label: NEUTRAL },
+		warm: { min: 0, max: 0.4, label: WARM },
+		neutral: { min: 0.4, max: 0.45, label: NEUTRAL },
 		cool: { min: 0.45, max: 1, label: COOL },
 	},
 };

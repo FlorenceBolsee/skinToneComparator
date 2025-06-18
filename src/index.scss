@@ -32,6 +32,7 @@ body {
 
 .app {
 	max-width: calc(var(--swatch-width) * 2 + 50px);
+	padding-top: 20px;
 }
 
 .cyan,
@@ -62,7 +63,7 @@ body {
 }
 
 .magenta::after {
-	background-color: #ff8eff;
+	background-color: magenta;
 }
 
 .yellow::after {
