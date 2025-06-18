@@ -3,11 +3,7 @@ import path from 'path';
 import hsl2rgb from '../utils/hsl2rgb';
 import rgb2cmyk from '../utils/rgb2cmyk';
 import skinCategoryPicker from '../utils/skinCategoryPicker';
-import {
-	hueValues,
-	lightnessValues,
-	saturationValues,
-} from './generate-dataset';
+import { hueValues, toneTable } from './generate-dataset';
 
 const __dirname = path.resolve();
 
@@ -37,8 +33,8 @@ const json: DatasetItem[] = [];
 const labelRecords: Record<string, boolean> = {};
 
 hueValues.forEach((h) => {
-	saturationValues.forEach((s) => {
-		lightnessValues.forEach((l) => {
+	toneTable.forEach(({ lightness: l, saturationValues }) => {
+		saturationValues.forEach((s) => {
 			const datasetItem: DatasetItem = {
 				label: '',
 				cmyk: {
