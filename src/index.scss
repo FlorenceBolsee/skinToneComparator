@@ -12,6 +12,12 @@ button {
 
 body {
 	background: var(--color-surface);
+
+	&.prevent-scroll {
+		height: 100svh;
+		position: fixed;
+		overflow-y: clip;
+	}
 }
 
 #root {
@@ -19,6 +25,7 @@ body {
 	--swatch-width: 160px;
 	font-family: 'Lato', helvetica, arial, sans-serif;
 	color: var(--color-text);
+	width: 100vw;
 	display: flex;
 	justify-content: center;
 }
