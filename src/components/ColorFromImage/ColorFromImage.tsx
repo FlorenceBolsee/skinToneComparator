@@ -1,14 +1,21 @@
+import debounce from 'debounce';
 import {
 	ChangeEvent,
 	CSSProperties,
 	MouseEventHandler,
 	useRef,
 	useState,
+	WheelEventHandler,
 } from 'react';
+import lab2rgb from '../../utils/lab2rgb';
+import { numArrayAverage } from '../../utils/numArrayAverage';
+import { numArrayMedian } from '../../utils/numArrayMedian';
 import rgb2hex from '../../utils/rgb2hex';
+import { rgb2lab } from '../../utils/rgb2lab';
 import './ColorFromImage.scss';
 
 const IMAGE_HEIGHT = 354;
+const CLASS_FREEZE_BODY = 'prevent-scroll';
 
 const ColorFromImage = ({
 	onInput,
@@ -17,16 +24,51 @@ const ColorFromImage = ({
 }) => {
 	const [selecting, setSelecting] = useState<'colorA' | 'colorB' | null>(null);
 	const [picture, setPicture] = useState('');
-	const [magnifier, setMagnifier] = useState({
+	const [viewFinder, setViewFinder] = useState({
 		background: 'transparent',
-		x: 0,
-		y: 0,
+		x: 5,
+		y: 5,
 	});
 	const [imageData, setImageData] =
 		useState<Uint8ClampedArray<ArrayBufferLike>>();
+	const [sampleSize, setSampleSize] = useState(10);
+	const [useAverage, setUserAverage] = useState(false);
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const imageRef = useRef<HTMLImageElement>(null);
 	const containerRef = useRef<HTMLFieldSetElement>(null);
+
+	const getScrollbarWidth = () =>
+		window.innerWidth - document.documentElement.clientWidth;
+
+	const freezeBody = (freeze: boolean) => {
+		const { body } = document;
+
+		if (freeze) {
+			body.style.top = `-${window.scrollY}px`;
+			body.style.paddingRight = `${getScrollbarWidth()}px`;
+		}
+
+		body.classList.toggle(CLASS_FREEZE_BODY, freeze);
+
+		if (freeze) return;
+
+		const scrollY = body.style.top;
+
+		body.style.top = '';
+		body.style.paddingRight = '';
+
+		window.scrollTo({
+			top: parseInt(scrollY) * -1,
+			behavior: 'instant',
+		});
+	};
+
+	const adjustSample: WheelEventHandler<HTMLCanvasElement> = (event) => {
+		if (!selecting || !document.body.classList.contains(CLASS_FREEZE_BODY))
+			return;
+		const newSize = sampleSize + event.deltaY;
+		setSampleSize(Math.min(Math.max(newSize - (newSize % 2), 6), 64));
+	};
 
 	const showImage = (fileReader: FileReader) => {
 		if (
@@ -59,8 +101,8 @@ const ColorFromImage = ({
 		const scaleX = width / naturalWidth;
 		const scaleY = IMAGE_HEIGHT / naturalHeight;
 		let scale = scaleX;
-		if (scaleY < scaleX) {
-			scale = scaleX;
+		if (scaleY > scaleX) {
+			scale = scaleY;
 		}
 
 		const x = ((naturalWidth * scale - width) / 2) * -1;
@@ -87,60 +129,96 @@ const ColorFromImage = ({
 	};
 
 	const handleSelectionClick = (currentColor: 'colorA' | 'colorB') => {
+		setViewFinder({
+			...viewFinder,
+			background: 'transparent',
+		});
 		setSelecting(currentColor);
 	};
 
 	const handleCanvasClick: MouseEventHandler<HTMLCanvasElement> = () => {
-		if (!selecting || magnifier.background === 'transparent') return;
+		if (!selecting || viewFinder.background === 'transparent') return;
 
-		onInput(magnifier.background, selecting);
+		onInput(viewFinder.background, selecting);
 	};
 
-	const handleCanvasHover: MouseEventHandler<HTMLCanvasElement> = (event) => {
-		if (!selecting || !canvasRef.current || !imageData) return;
+	const handleCanvasHover: MouseEventHandler<HTMLCanvasElement> = debounce(
+		(event) => {
+			if (!selecting || !canvasRef.current || !imageData) return;
 
-		const { pageX, pageY } = event;
+			const { pageX, pageY } = event;
 
-		const { top, left, width, height } =
-			canvasRef.current.getBoundingClientRect();
+			const { top, left, width, height } =
+				canvasRef.current.getBoundingClientRect();
 
-		const x = Math.round(Math.min(Math.max(pageX - left - scrollX, 0), width));
-		const y = Math.round(Math.min(Math.max(pageY - top - scrollY, 0), height));
+			const x = Math.round(
+				Math.min(Math.max(pageX - left - scrollX, 0), width),
+			);
+			const y = Math.round(
+				Math.min(Math.max(pageY - top - scrollY, 0), height),
+			);
 
-		const dataLine = width * 4;
-		const dataStartCol = Math.max(x * 4 - 3 * 4, 0);
-		const dataStartIndex = y * dataLine + dataStartCol;
-		const dataSampleWidth = 6 * 4;
-		const dataEndCol = Math.min(dataStartCol + dataSampleWidth, dataLine);
-		const dataEndIndex = dataStartIndex + 5 * dataLine + dataSampleWidth;
+			const dataLine = width * 4;
+			const dataStartCol = Math.max(x * 4 - (4 * sampleSize) / 2, 0);
+			const dataStartIndex =
+				Math.max(y * dataLine - (sampleSize / 2) * dataLine, 0) + dataStartCol;
+			const dataSampleWidth = sampleSize * 4;
+			const dataEndCol = Math.min(dataStartCol + dataSampleWidth, dataLine);
+			const dataEndIndex =
+				dataStartIndex + sampleSize * dataLine + dataSampleWidth;
 
-		const reds: number[] = [];
-		const greens: number[] = [];
-		const blues: number[] = [];
+			const ls: number[] = [];
+			const as: number[] = [];
+			const bs: number[] = [];
 
-		let pixels = 0;
+			let pixels = 0;
 
-		for (let i = dataEndIndex; i >= dataStartIndex; i -= 4) {
-			const dataX = i % dataLine;
-			if (dataX > dataStartCol && dataX <= dataEndCol) {
-				pixels += 1;
-				if (imageData[i]) reds.push(imageData[i] as number);
-				if (imageData[i + 1]) greens.push(imageData[i + 1] as number);
-				if (imageData[i + 2]) blues.push(imageData[i + 2] as number);
+			for (let i = dataEndIndex; i >= dataStartIndex; i -= 4) {
+				const dataX = i % dataLine;
+				if (dataX > dataStartCol && dataX <= dataEndCol) {
+					pixels += 1;
+					if (imageData[i] && imageData[i + 1] && imageData[i + 2]) {
+						const { l, a, b } = rgb2lab({
+							r: imageData[i] as number,
+							g: imageData[i + 1] as number,
+							b: imageData[i + 2] as number,
+						});
+						ls.push(l);
+						as.push(a);
+						bs.push(b);
+					}
+				}
 			}
-		}
 
-		const r = reds.reduce((acc, curr) => acc + curr, 0) / reds.length;
-		const g = greens.reduce((acc, curr) => acc + curr, 0) / greens.length;
-		const b = blues.reduce((acc, curr) => acc + curr, 0) / blues.length;
+			const lAverage = numArrayAverage(ls);
+			const aAverage = numArrayAverage(as);
+			const bAverage = numArrayAverage(bs);
 
-		const hex = rgb2hex(r, g, b);
-		setMagnifier({
-			background: hex,
-			x: Math.min(Math.max(x + 10, 0), width - 24),
-			y: Math.min(Math.max(y - 32, 0), height - 24),
-		});
-	};
+			const lMedian = numArrayMedian(ls);
+			const aMedian = numArrayMedian(as);
+			const bMedian = numArrayMedian(bs);
+
+			const {
+				r: rAverage,
+				g: gAverage,
+				b: blueAverage,
+			} = lab2rgb({ l: lAverage, a: aAverage, b: bAverage });
+			const {
+				r: rMedian,
+				g: gMedian,
+				b: blueMedian,
+			} = lab2rgb({ l: lMedian, a: aMedian, b: bMedian });
+			const hexAverage = rgb2hex(rAverage, gAverage, blueAverage);
+			const hexMedian = rgb2hex(rMedian, gMedian, blueMedian);
+
+			setViewFinder({
+				background: useAverage ? hexAverage : hexMedian,
+				x: Math.min(Math.max(x, sampleSize / 2), width - sampleSize / 2),
+				y: Math.min(Math.max(y, sampleSize / 2), height - sampleSize / 2),
+			});
+		},
+		5,
+	);
 
 	return (
 		<>
@@ -158,6 +236,24 @@ const ColorFromImage = ({
 				className={`image-container${selecting ? ' color-picking' : ''}${picture.length > 0 ? ' show' : ''}`}
 			>
 				<legend>Select from Picture</legend>
+
+				<div className="checkbox-input">
+					<label htmlFor="useAverage">
+						<input
+							type="checkbox"
+							id="useAverage"
+							name="useAverage"
+							value={`${useAverage}`}
+							onChange={(event) => setUserAverage(event.target.checked)}
+						/>
+						Use average
+					</label>
+				</div>
+
+				<div
+					className="color-preview"
+					style={{ '--color-input': viewFinder.background } as CSSProperties}
+				></div>
 
 				<div className="radio-input">
 					<label htmlFor="selectingColorA">
@@ -190,14 +286,17 @@ const ColorFromImage = ({
 					height="0"
 					onClick={handleCanvasClick}
 					onMouseMove={handleCanvasHover}
+					onWheel={adjustSample}
+					onPointerEnter={() => freezeBody(true)}
+					onPointerLeave={() => freezeBody(false)}
 				></canvas>
 				<div
-					className="color-magnifier"
+					className="color-viewfinder"
 					style={
 						{
-							'--magnifier-background': magnifier.background,
-							'--magnifier-x': `${magnifier.x}px`,
-							'--magnifier-y': `${magnifier.y}px`,
+							'--viewfinder-x': `${viewFinder.x}px`,
+							'--viewfinder-y': `${viewFinder.y}px`,
+							'--viewfinder-width': `${sampleSize}px`,
 						} as CSSProperties
 					}
 				></div>

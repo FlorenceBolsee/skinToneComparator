@@ -2,59 +2,29 @@ import { COOL, MUTED, NEUTRAL, OLIVE, WARM } from '../consts';
 
 const SKIN_CATEGORIES = [
 	{
-		label: 'Lightest',
-		lightness: { min: 79, max: 100 },
-		expectedBlack: 0.38,
+		label: 'Pale',
+		lightness: { min: 75, max: 100 },
+		expectedBlack: 0.56,
 	},
 	{
 		label: 'Light',
-		lightness: { min: 73, max: 79 },
+		lightness: { min: 70, max: 75 },
 		expectedBlack: 0.51,
 	},
 	{
-		label: 'Light Medium',
-		lightness: { min: 67, max: 73 },
-		expectedBlack: 0.55,
-	},
-	{
-		label: 'Medium Light',
-		lightness: { min: 61, max: 67 },
-		expectedBlack: 0.61,
-	},
-	{
 		label: 'Medium',
-		lightness: { min: 55, max: 61 },
-		expectedBlack: 0.63,
-	},
-	{
-		label: 'Medium Tan',
-		lightness: { min: 51, max: 55 },
-		expectedBlack: 0.66,
-	},
-	{
-		label: 'Tan Medium',
-		lightness: { min: 43, max: 51 },
-		expectedBlack: 0.74,
+		lightness: { min: 63, max: 70 },
+		expectedBlack: 0.48,
 	},
 	{
 		label: 'Tan',
-		lightness: { min: 37, max: 43 },
-		expectedBlack: 0.8,
-	},
-	{
-		label: 'Deep Tan',
-		lightness: { min: 31, max: 37 },
-		expectedBlack: 0.83,
+		lightness: { min: 40, max: 63 },
+		expectedBlack: 0.55,
 	},
 	{
 		label: 'Deep',
-		lightness: { min: 25, max: 31 },
-		expectedBlack: 0.87,
-	},
-	{
-		label: 'Darkest',
-		lightness: { min: 0, max: 25 },
-		expectedBlack: 0.9,
+		lightness: { min: 0, max: 40 },
+		expectedBlack: 0.84,
 	},
 ];
 
@@ -65,9 +35,9 @@ const UNDERTONES_THRESHOLDS = {
 		cool: { min: 0.65, max: 1, label: COOL },
 	},
 	olive: {
-		warm: { min: 0, max: 0.34, label: WARM },
-		neutral: { min: 0.34, max: 0.4, label: NEUTRAL },
-		cool: { min: 0.4, max: 1, label: COOL },
+		warm: { min: 0, max: 0.4, label: WARM },
+		neutral: { min: 0.4, max: 0.45, label: NEUTRAL },
+		cool: { min: 0.45, max: 1, label: COOL },
 	},
 };
 
@@ -98,13 +68,13 @@ const skinCategoryPicker = (
 
 		const magentaRatio = cmyk.m / cmyk.y;
 
-		if (isMutedOrOlive && magentaRatio < 0.5) {
+		if (isMutedOrOlive && magentaRatio <= 0.55) {
 			// Olive
 			isOlive = true;
 			undertoneThreshold = UNDERTONES_THRESHOLDS.olive;
 		}
 
-		if (isMutedOrOlive && magentaRatio >= 0.5) {
+		if (isMutedOrOlive && magentaRatio > 0.55) {
 			// Muted
 			isMuted = true;
 		}

@@ -1,0 +1,100 @@
+.color-chart {
+	display: flex;
+	flex-flow: column;
+	gap: var(--gap);
+
+	hr {
+		margin: var(--gap) 0;
+	}
+}
+
+.chart-row {
+	display: grid;
+	grid-template-columns: repeat(5, 1fr);
+	gap: 2px;
+}
+
+.chart-hue {
+	position: relative;
+	width: 100%;
+	height: 36px;
+	margin-top: calc(var(--text-medium) + 2px);
+
+	span {
+		position: absolute;
+		top: calc((var(--text-medium) + 2px) * -1);
+		left: 50%;
+		transform: translateX(-50%);
+		font-size: var(--text-medium);
+		line-height: 1;
+	}
+}
+
+.gradient-grid {
+	display: grid;
+	grid-template-columns: 1fr;
+	margin: 20px 0;
+}
+
+.gradient {
+	width: 100%;
+	height: 150px;
+	position: relative;
+	background: linear-gradient(
+		to bottom,
+		var(--gradient-top-left),
+		var(--gradient-bottom-left)
+	);
+	z-index: 1;
+
+	&::after {
+		content: '';
+		position: absolute;
+		width: 100%;
+		height: 100%;
+		top: 0;
+		left: 0;
+		background: linear-gradient(
+			to bottom,
+			var(--gradient-top-right),
+			var(--gradient-bottom-right)
+		);
+		z-index: 2;
+		mask-image: linear-gradient(to left, black, transparent);
+	}
+}
+
+.gradient-deep {
+	--gradient-top-left: oklch(0.3893 0.0636 36.75);
+	--gradient-top-right: oklch(0.4329 0.0554 79.02);
+	--gradient-bottom-left: oklch(0.397 0.1092 36.43);
+	--gradient-bottom-right: oklch(0.4702 0.0872 75.33);
+}
+
+.gradient-tan {
+	--gradient-top-left: oklch(0.5133 0.0895 34.94);
+	--gradient-top-right: oklch(0.5781 0.0769 77.76);
+	--gradient-bottom-left: oklch(0.5243 0.142 36.39);
+	--gradient-bottom-right: oklch(0.6169 0.1141 74.88);
+}
+
+.gradient-medium {
+	--gradient-top-left: oklch(0.6326 0.0788 36.77);
+	--gradient-top-right: oklch(0.6936 0.0727 80.55);
+	--gradient-bottom-left: oklch(0.635 0.1267 36.24);
+	--gradient-bottom-right: oklch(0.7229 0.1081 76.42);
+}
+
+.gradient-light {
+	--gradient-top-left: oklch(0.7503 0.0474 35.16);
+	--gradient-top-right: oklch(0.7893 0.044 81.06);
+	--gradient-bottom-left: oklch(0.7467 0.082 37.22);
+	--gradient-bottom-right: oklch(0.8127 0.0778 80.65);
+}
+
+.gradient-pale {
+	--gradient-top-left: oklch(0.8656 0.0224 35.12);
+	--gradient-top-right: oklch(0.8871 0.0245 85.79);
+	--gradient-bottom-left: oklch(0.8625 0.0378 38.68);
+	--gradient-bottom-right: oklch(0.8937 0.0384 81.5);
+}

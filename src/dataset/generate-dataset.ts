@@ -1,3 +1,4 @@
+import { arrayRange } from '../utils/arrayRange';
 import { randomClamp } from '../utils/randomClamp';
 
 export const generateTone = () => {
@@ -8,6 +9,26 @@ export const generateTone = () => {
 	return { h, s, l };
 };
 
-export const hueValues = [10, 20, 30, 34, 37];
-export const saturationValues = [30, 31, 32, 35, 37, 41, 47, 50, 60];
-export const lightnessValues = [20, 26, 33, 39, 45, 52, 59, 65, 72, 78, 85];
+export const hueValues = Array.from({ length: 24 }, (_, idx) => 13 + idx);
+export const toneTable = [
+	{
+		lightness: 28,
+		saturationValues: arrayRange(38, 80),
+	},
+	{
+		lightness: 42,
+		saturationValues: arrayRange(38, 75),
+	},
+	{
+		lightness: 56,
+		saturationValues: arrayRange(34, 65),
+	},
+	{
+		lightness: 70,
+		saturationValues: arrayRange(32, 62),
+	},
+	{
+		lightness: 84,
+		saturationValues: arrayRange(30, 60),
+	},
+];
