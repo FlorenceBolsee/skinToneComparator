@@ -2,7 +2,7 @@ import { COOL, MUTED, NEUTRAL, OLIVE, WARM } from '../consts';
 
 const SKIN_CATEGORIES = [
 	{
-		label: 'Pale',
+		label: 'Fair',
 		lightness: { min: 75, max: 100 },
 		expectedBlack: 0.56,
 	},
@@ -62,21 +62,15 @@ const skinCategoryPicker = (
 
 		skinCategory = label;
 
-		const isMutedOrOlive = cmyk.k / (100 - l) > expectedBlack;
+		const magentaRatio = cmyk.m / cmyk.y;
+
+		isMuted = cmyk.k / (100 - l) > expectedBlack;
+		isOlive = magentaRatio < 0.5;
 
 		let undertoneThreshold = UNDERTONES_THRESHOLDS.regular;
 
-		const magentaRatio = cmyk.m / cmyk.y;
-
-		if (isMutedOrOlive && magentaRatio <= 0.55) {
-			// Olive
-			isOlive = true;
+		if (isOlive) {
 			undertoneThreshold = UNDERTONES_THRESHOLDS.olive;
-		}
-
-		if (isMutedOrOlive && magentaRatio > 0.55) {
-			// Muted
-			isMuted = true;
 		}
 
 		undertone = Object.values(undertoneThreshold).find(

@@ -222,7 +222,7 @@ const ColorFromImage = ({
 
 	return (
 		<>
-			<label htmlFor="image">Load image</label>
+			<label htmlFor="image">Load image (optional)</label>
 			<input
 				className="file-upload"
 				type="file"

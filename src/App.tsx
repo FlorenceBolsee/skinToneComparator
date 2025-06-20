@@ -4,10 +4,23 @@ import ColorsFromInput from './components/ColorsFromInput/ColorsFromInput';
 const App = () => {
 	return (
 		<div className="app">
-			<h1>Skin Tones Comparisons</h1>
+			<h1>Skin Tones Comparator</h1>
 			<p className="description">
-				Swatches picked from various skin tones with visualization using the
-				CMYK color system to understand the difference in pigments.
+				Helper to find what pigments are missing to adjust a product to your
+				skin tone.
+			</p>
+			<p className="description">
+				Provides a visualization in the CMYK color system, more information
+				available under the 'i' symbol.
+			</p>
+			<p className="description">
+				The first color should be the shade that you want to adjust (a
+				foundation that doesn't match, discoloration...) The second color should
+				be the desired shade.
+			</p>
+			<p className="description">
+				For best results, pick the two colors from the same picture with good
+				lighting on the selected area.
 			</p>
 			<ColorsFromInput />
 			<ColorsFromDataset />
