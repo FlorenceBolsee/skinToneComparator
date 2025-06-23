@@ -66,9 +66,9 @@ const getCorrector = (cmyk: {
 
 	if (needsWhite) {
 		const largest = Math.max(c, m, y, k);
-		const restMagenta = m - largest;
-		const restYellow = y - largest;
-		const restBlack = Math.max(c, k) - largest;
+		const restMagenta = Math.max(m - largest, -100);
+		const restYellow = Math.max(y - largest, -100);
+		const restBlack = Math.max(Math.max(c, k) - largest, -100);
 
 		return getCorrector({
 			c: 0,
