@@ -32,7 +32,7 @@ const ColorPair = ({
 				</button>
 			)}
 			<h2>
-				{title}
+				{title && <span>{title}</span>}
 				<Tooltip>
 					<ColorInfo colorA={colorA} colorB={colorB} />
 				</Tooltip>

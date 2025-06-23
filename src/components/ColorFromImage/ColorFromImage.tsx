@@ -136,89 +136,93 @@ const ColorFromImage = ({
 		setSelecting(currentColor);
 	};
 
-	const handleCanvasClick: MouseEventHandler<HTMLCanvasElement> = () => {
-		if (!selecting || viewFinder.background === 'transparent') return;
+	const handleCanvasClick: MouseEventHandler<HTMLCanvasElement> = (event) => {
+		if (!selecting) return;
 
-		onInput(viewFinder.background, selecting);
+		const backgroundColor =
+			viewFinder.background === 'transparent'
+				? getCanvasColor(event)
+				: viewFinder.background;
+
+		onInput(backgroundColor, selecting);
 	};
 
-	const handleCanvasHover: MouseEventHandler<HTMLCanvasElement> = debounce(
-		(event) => {
-			if (!selecting || !canvasRef.current || !imageData) return;
+	const getCanvasColor = (
+		event: React.MouseEvent<HTMLCanvasElement, MouseEvent>,
+	) => {
+		if (!selecting || !canvasRef.current || !imageData)
+			return viewFinder.background;
 
-			const { pageX, pageY } = event;
+		const { pageX, pageY } = event;
 
-			const { top, left, width, height } =
-				canvasRef.current.getBoundingClientRect();
+		const { top, left, width, height } =
+			canvasRef.current.getBoundingClientRect();
 
-			const x = Math.round(
-				Math.min(Math.max(pageX - left - scrollX, 0), width),
-			);
-			const y = Math.round(
-				Math.min(Math.max(pageY - top - scrollY, 0), height),
-			);
+		const x = Math.round(Math.min(Math.max(pageX - left - scrollX, 0), width));
+		const y = Math.round(Math.min(Math.max(pageY - top - scrollY, 0), height));
 
-			const dataLine = width * 4;
-			const dataStartCol = Math.max(x * 4 - (4 * sampleSize) / 2, 0);
-			const dataStartIndex =
-				Math.max(y * dataLine - (sampleSize / 2) * dataLine, 0) + dataStartCol;
-			const dataSampleWidth = sampleSize * 4;
-			const dataEndCol = Math.min(dataStartCol + dataSampleWidth, dataLine);
-			const dataEndIndex =
-				dataStartIndex + sampleSize * dataLine + dataSampleWidth;
+		const dataLine = width * 4;
+		const dataStartCol = Math.max(x * 4 - (4 * sampleSize) / 2, 0);
+		const dataStartIndex =
+			Math.max(y * dataLine - (sampleSize / 2) * dataLine, 0) + dataStartCol;
+		const dataSampleWidth = sampleSize * 4;
+		const dataEndCol = Math.min(dataStartCol + dataSampleWidth, dataLine);
+		const dataEndIndex =
+			dataStartIndex + sampleSize * dataLine + dataSampleWidth;
 
-			const ls: number[] = [];
-			const as: number[] = [];
-			const bs: number[] = [];
+		const ls: number[] = [];
+		const as: number[] = [];
+		const bs: number[] = [];
 
-			let pixels = 0;
+		let pixels = 0;
 
-			for (let i = dataEndIndex; i >= dataStartIndex; i -= 4) {
-				const dataX = i % dataLine;
-				if (dataX > dataStartCol && dataX <= dataEndCol) {
-					pixels += 1;
-					if (imageData[i] && imageData[i + 1] && imageData[i + 2]) {
-						const { l, a, b } = rgb2lab({
-							r: imageData[i] as number,
-							g: imageData[i + 1] as number,
-							b: imageData[i + 2] as number,
-						});
-						ls.push(l);
-						as.push(a);
-						bs.push(b);
-					}
+		for (let i = dataEndIndex; i >= dataStartIndex; i -= 4) {
+			const dataX = i % dataLine;
+			if (dataX > dataStartCol && dataX <= dataEndCol) {
+				pixels += 1;
+				if (imageData[i] && imageData[i + 1] && imageData[i + 2]) {
+					const { l, a, b } = rgb2lab({
+						r: imageData[i] as number,
+						g: imageData[i + 1] as number,
+						b: imageData[i + 2] as number,
+					});
+					ls.push(l);
+					as.push(a);
+					bs.push(b);
 				}
 			}
+		}
 
-			const lAverage = numArrayAverage(ls);
-			const aAverage = numArrayAverage(as);
-			const bAverage = numArrayAverage(bs);
+		const lAverage = numArrayAverage(ls);
+		const aAverage = numArrayAverage(as);
+		const bAverage = numArrayAverage(bs);
 
-			const lMedian = numArrayMedian(ls);
-			const aMedian = numArrayMedian(as);
-			const bMedian = numArrayMedian(bs);
+		const lMedian = numArrayMedian(ls);
+		const aMedian = numArrayMedian(as);
+		const bMedian = numArrayMedian(bs);
 
-			const {
-				r: rAverage,
-				g: gAverage,
-				b: blueAverage,
-			} = lab2rgb({ l: lAverage, a: aAverage, b: bAverage });
-			const {
-				r: rMedian,
-				g: gMedian,
-				b: blueMedian,
-			} = lab2rgb({ l: lMedian, a: aMedian, b: bMedian });
-			const hexAverage = rgb2hex(rAverage, gAverage, blueAverage);
-			const hexMedian = rgb2hex(rMedian, gMedian, blueMedian);
+		const {
+			r: rAverage,
+			g: gAverage,
+			b: blueAverage,
+		} = lab2rgb({ l: lAverage, a: aAverage, b: bAverage });
+		const {
+			r: rMedian,
+			g: gMedian,
+			b: blueMedian,
+		} = lab2rgb({ l: lMedian, a: aMedian, b: bMedian });
+		const hexAverage = rgb2hex(rAverage, gAverage, blueAverage);
+		const hexMedian = rgb2hex(rMedian, gMedian, blueMedian);
 
-			setViewFinder({
-				background: useAverage ? hexAverage : hexMedian,
-				x: Math.min(Math.max(x, sampleSize / 2), width - sampleSize / 2),
-				y: Math.min(Math.max(y, sampleSize / 2), height - sampleSize / 2),
-			});
-		},
-		5,
-	);
+		setViewFinder({
+			background: useAverage ? hexAverage : hexMedian,
+			x: Math.min(Math.max(x, sampleSize / 2), width - sampleSize / 2),
+			y: Math.min(Math.max(y, sampleSize / 2), height - sampleSize / 2),
+		});
+		return useAverage ? hexAverage : hexMedian;
+	};
+
+	const handleCanvasHover = debounce(getCanvasColor, 5);
 
 	return (
 		<>

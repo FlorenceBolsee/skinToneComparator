@@ -106,7 +106,7 @@ const ColorInfo = ({ colorA, colorB }: { colorA: Color; colorB: Color }) => {
 
 	return (
 		<div className="color-info">
-			<h3>{colorA.name}:</h3>
+			<h3>{colorA.name || 'First color'}:</h3>
 			<p>
 				<strong>CMYK </strong>
 				<span
@@ -117,7 +117,7 @@ const ColorInfo = ({ colorA, colorB }: { colorA: Color; colorB: Color }) => {
 				<strong>Skin tone: </strong>
 				<span>{skinCategoryPicker(colorA.cmyk, cmyk2hsl(colorA.cmyk))}</span>
 			</p>
-			<h3>{colorB.name}:</h3>
+			<h3>{colorB.name || 'Second color'}:</h3>
 			<p>
 				<strong>CMYK </strong>
 				<span
@@ -129,7 +129,8 @@ const ColorInfo = ({ colorA, colorB }: { colorA: Color; colorB: Color }) => {
 				<span>{skinCategoryPicker(colorB.cmyk, cmyk2hsl(colorB.cmyk))}</span>
 			</p>
 			<h3>
-				{colorA.name} compared to {colorB.name}:
+				{colorA.name || 'First color'} compared to{' '}
+				{colorB.name || 'second color'}:
 			</h3>
 			<ul>
 				{Object.entries(differences).map(([key, value], idx) => (

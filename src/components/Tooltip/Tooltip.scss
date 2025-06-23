@@ -24,10 +24,12 @@
 	border: none;
 	display: inline-flex;
 	cursor: pointer;
-	margin-left: var(--gap);
 
 	svg {
 		fill: var(--color-text);
-		margin-left: var(--gap);
+	}
+
+	&:not(:first-child) {
+		margin-left: calc(var(--gap) * 2);
 	}
 }
