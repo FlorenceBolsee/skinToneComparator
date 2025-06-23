@@ -36,8 +36,8 @@ const getCorrector = (cmyk: {
 	const needsBlack = Math.min(c, k) < -1;
 	const needsWhite = w < -1;
 
-	if (needsBlack && needsMagenta && needsYellow && !needsWhite) {
-		return 'brown';
+	if (needsBlack && needsMagenta && needsYellow) {
+		return needsWhite ? 'beige' : 'brown';
 	}
 
 	if (needsBlack && !needsMagenta && !needsYellow) {
