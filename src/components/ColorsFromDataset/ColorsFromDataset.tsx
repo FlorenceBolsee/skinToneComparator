@@ -25,7 +25,7 @@ export type ColorDataPair = {
 
 const generateLabel = (label: string, title: string) => {
 	const generatedLabel = label.replace(title, '');
-	return generatedLabel.length ? generatedLabel : 'Normal';
+	return generatedLabel.length ? generatedLabel : 'Regular';
 };
 
 const ColorsFromDataset = () => {
@@ -71,7 +71,7 @@ const ColorsFromDataset = () => {
 						if (items[idx]) {
 							pairings.push({
 								title: trimmedLabel,
-								swatches: [items[idx], item],
+								swatches: [item, items[idx]],
 							});
 						}
 					});

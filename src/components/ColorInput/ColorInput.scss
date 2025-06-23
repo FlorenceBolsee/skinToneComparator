@@ -24,10 +24,15 @@
 		color: var(--color-overlay);
 		transition: background 0.2s;
 
-		&:hover,
 		&:focus-visible,
 		&.active {
 			background: var(--color-hover);
+		}
+
+		&:hover {
+			@media screen and (min-width: 720px) {
+				background: var(--color-hover);
+			}
 		}
 
 		&:disabled {

@@ -4,10 +4,10 @@ import hsl2rgb from '../../utils/hsl2rgb';
 import rgb2hex from '../../utils/rgb2hex';
 import './ColorChart.scss';
 
-const WARM_OLIVE_HUE = 36;
+const WARM_OLIVE_HUE = 38;
 const COOL_OLIVE_HUE = 24;
 const COOL_HUE = 13;
-const WARM_HUE = 25;
+const WARM_HUE = 30;
 
 const ColorHue = ({
 	h,

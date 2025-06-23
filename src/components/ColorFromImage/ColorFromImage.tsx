@@ -66,7 +66,7 @@ const ColorFromImage = ({
 	const adjustSample: WheelEventHandler<HTMLCanvasElement> = (event) => {
 		if (!selecting || !document.body.classList.contains(CLASS_FREEZE_BODY))
 			return;
-		const newSize = sampleSize + event.deltaY;
+		const newSize = sampleSize + (event.deltaY > 0 ? 4 : -4);
 		setSampleSize(Math.min(Math.max(newSize - (newSize % 2), 6), 64));
 	};
 
@@ -222,7 +222,7 @@ const ColorFromImage = ({
 
 	return (
 		<>
-			<label htmlFor="image">Load image</label>
+			<label htmlFor="image">Load image (optional)</label>
 			<input
 				className="file-upload"
 				type="file"
@@ -238,7 +238,10 @@ const ColorFromImage = ({
 				<legend>Select from Picture</legend>
 
 				<div className="checkbox-input">
-					<label htmlFor="useAverage">
+					<label
+						htmlFor="useAverage"
+						title="By default, the output is the median value of the selected area"
+					>
 						<input
 							type="checkbox"
 							id="useAverage"
@@ -255,6 +258,29 @@ const ColorFromImage = ({
 					style={{ '--color-input': viewFinder.background } as CSSProperties}
 				></div>
 
+				{!!selecting && (
+					<>
+						<button
+							onClick={(event) => {
+								event.preventDefault();
+								setSampleSize(Math.min(sampleSize + 12, 64));
+							}}
+							className="target-sizing"
+						>
+							+
+						</button>
+						<button
+							onClick={(event) => {
+								event.preventDefault();
+								setSampleSize(Math.max(sampleSize - 12, 6));
+							}}
+							className="target-sizing"
+						>
+							-
+						</button>
+					</>
+				)}
+
 				<div className="radio-input">
 					<label htmlFor="selectingColorA">
 						<input
@@ -262,6 +288,7 @@ const ColorFromImage = ({
 							id="selectingColorA"
 							name="selecting"
 							value="colorA"
+							checked={selecting === 'colorA'}
 							onChange={(event) => {
 								if (event.target.checked) handleSelectionClick('colorA');
 							}}
@@ -274,6 +301,7 @@ const ColorFromImage = ({
 							id="selectingColorB"
 							name="selecting"
 							value="colorB"
+							checked={selecting === 'colorB'}
 							onChange={(event) => {
 								if (event.target.checked) handleSelectionClick('colorB');
 							}}

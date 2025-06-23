@@ -23,6 +23,65 @@ const LABELS = {
 const getWhite = (cmyk: { c: number; m: number; y: number; k: number }) =>
 	100 - Object.values(cmyk).reduce((acc, curr) => acc + curr, 0);
 
+const getCorrector = (cmyk: {
+	c: number;
+	m: number;
+	y: number;
+	k: number;
+	w: number;
+}) => {
+	const { c, m, y, k, w } = cmyk;
+	const needsMagenta = m < -1;
+	const needsYellow = y < -1;
+	const needsBlack = Math.min(c, k) < -1;
+	const needsWhite = w < -1;
+
+	if (needsBlack && needsMagenta && needsYellow && !needsWhite) {
+		return 'brown';
+	}
+
+	if (needsBlack && !needsMagenta && !needsYellow) {
+		return 'blue';
+	}
+
+	if (needsYellow && !needsMagenta && !needsBlack) {
+		return 'yellow';
+	}
+
+	if (needsMagenta && !needsYellow && !needsBlack) {
+		return needsWhite ? 'pink' : 'magenta';
+	}
+
+	if (needsBlack && needsMagenta && !needsYellow) {
+		return needsWhite ? 'lavender' : 'purple';
+	}
+
+	if (needsYellow && needsBlack && !needsMagenta) {
+		return 'green';
+	}
+
+	if (needsYellow && needsMagenta && !needsBlack) {
+		return needsWhite ? 'peach' : 'orange';
+	}
+
+	if (needsWhite) {
+		const largest = Math.max(c, m, y, k);
+		const restMagenta = m - largest;
+		const restYellow = y - largest;
+		const restBlack = Math.max(c, k) - largest;
+
+		return getCorrector({
+			c: 0,
+			m: restMagenta,
+			y: restYellow,
+			k: restBlack,
+			w,
+		});
+	}
+
+	return '';
+};
+
 const ColorInfo = ({ colorA, colorB }: { colorA: Color; colorB: Color }) => {
 	const cmykString = ({
 		c,
@@ -55,7 +114,7 @@ const ColorInfo = ({ colorA, colorB }: { colorA: Color; colorB: Color }) => {
 				></span>
 			</p>
 			<p>
-				<strong>Diagnosis </strong>
+				<strong>Skin tone: </strong>
 				<span>{skinCategoryPicker(colorA.cmyk, cmyk2hsl(colorA.cmyk))}</span>
 			</p>
 			<h3>{colorB.name}:</h3>
@@ -66,7 +125,7 @@ const ColorInfo = ({ colorA, colorB }: { colorA: Color; colorB: Color }) => {
 				></span>
 			</p>
 			<p>
-				<strong>Diagnosis </strong>
+				<strong>Skin tone: </strong>
 				<span>{skinCategoryPicker(colorB.cmyk, cmyk2hsl(colorB.cmyk))}</span>
 			</p>
 			<h3>
@@ -92,6 +151,12 @@ const ColorInfo = ({ colorA, colorB }: { colorA: Color; colorB: Color }) => {
 					</li>
 				))}
 			</ul>
+			{getCorrector(differences).length > 0 && (
+				<p>
+					<strong>Corrector shade: </strong>
+					<span>{getCorrector(differences)}</span>
+				</p>
+			)}
 		</div>
 	);
 };

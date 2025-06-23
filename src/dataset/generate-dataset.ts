@@ -17,7 +17,7 @@ export const toneTable = [
 	},
 	{
 		lightness: 42,
-		saturationValues: arrayRange(38, 75),
+		saturationValues: arrayRange(36, 67),
 	},
 	{
 		lightness: 56,
