@@ -265,6 +265,7 @@ const ColorFromImage = ({
 								event.preventDefault();
 								setSampleSize(Math.min(sampleSize + 12, 64));
 							}}
+							disabled={sampleSize === 64}
 							className="target-sizing"
 						>
 							+
@@ -274,6 +275,7 @@ const ColorFromImage = ({
 								event.preventDefault();
 								setSampleSize(Math.max(sampleSize - 12, 6));
 							}}
+							disabled={sampleSize === 6}
 							className="target-sizing"
 						>
 							-
