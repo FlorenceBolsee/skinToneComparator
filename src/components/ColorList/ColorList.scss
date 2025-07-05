@@ -5,4 +5,9 @@
 	gap: var(--gap);
 	padding: var(--gap);
 	width: 100%;
+
+	@media screen and (min-width: 920px) {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+	}
 }

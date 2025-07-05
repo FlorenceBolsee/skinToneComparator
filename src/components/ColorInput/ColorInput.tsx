@@ -49,6 +49,7 @@ const ColorInput = ({
 	};
 
 	const [state, setState] = useState(defaultState);
+	const [addingSwatch, setAddingSwatch] = useState(false);
 
 	const handleChange = (
 		color: ColorResult,
@@ -74,6 +75,7 @@ const ColorInput = ({
 		const newSwatch = { ...state };
 		newSwatch.id = String(Date.now());
 		onSubmit(newSwatch);
+		setAddingSwatch(false);
 		setState(defaultState);
 	};
 
@@ -91,49 +93,62 @@ const ColorInput = ({
 	};
 
 	return (
-		<form className="color-input" onSubmit={handleSubmit}>
-			<h2>Enter a new swatch</h2>
-			<ColorFromImage onInput={handleInput} />
-			<label htmlFor="color-title">Swatch title</label>
-			<input
-				id="color-title"
-				name="color-title"
-				type="text"
-				value={state.title}
-				onChange={(event) => handleNames(event.target.value, 'title')}
-			/>
-			<ColorFieldWithPicker
-				label="First color"
-				name="color-a"
-				value={state.colorA.value}
-				onChange={(color) => handleChange(color, 'colorA')}
-				onInput={(event) => handleInput(event.target.value, 'colorA')}
-			/>
-			<label htmlFor="color-a-name">First color name</label>
-			<input
-				id="color-a-name"
-				name="color-a-name"
-				type="text"
-				value={state.colorA.name}
-				onChange={(event) => handleNames(event.target.value, 'colorA')}
-			/>
-			<ColorFieldWithPicker
-				label="Second color"
-				name="color-b"
-				value={state.colorB.value}
-				onChange={(color) => handleChange(color, 'colorB')}
-				onInput={(event) => handleInput(event.target.value, 'colorB')}
-			/>
-			<label htmlFor="color-b-name">Second color name</label>
-			<input
-				id="color-b-name"
-				name="color-b-name"
-				type="text"
-				value={state.colorB.name}
-				onChange={(event) => handleNames(event.target.value, 'colorB')}
-			/>
-			<button type="submit">Add Swatch</button>
-		</form>
+		<div className="color-input">
+			{!addingSwatch && (
+				<button className="color-add" onClick={() => setAddingSwatch(true)}>
+					New Swatch +
+				</button>
+			)}
+			{addingSwatch && (
+				<form onSubmit={handleSubmit}>
+					<h2>Enter a new swatch</h2>
+					<fieldset className="image-picker">
+						<ColorFromImage onInput={handleInput} />
+					</fieldset>
+					<fieldset className="form-part">
+						<label htmlFor="color-title">Swatch title</label>
+						<input
+							id="color-title"
+							name="color-title"
+							type="text"
+							value={state.title}
+							onChange={(event) => handleNames(event.target.value, 'title')}
+						/>
+						<ColorFieldWithPicker
+							label="Start color *"
+							name="color-a"
+							value={state.colorA.value}
+							onChange={(color) => handleChange(color, 'colorA')}
+							onInput={(event) => handleInput(event.target.value, 'colorA')}
+						/>
+						<label htmlFor="color-a-name">Start color name</label>
+						<input
+							id="color-a-name"
+							name="color-a-name"
+							type="text"
+							value={state.colorA.name}
+							onChange={(event) => handleNames(event.target.value, 'colorA')}
+						/>
+						<ColorFieldWithPicker
+							label="Target color *"
+							name="color-b"
+							value={state.colorB.value}
+							onChange={(color) => handleChange(color, 'colorB')}
+							onInput={(event) => handleInput(event.target.value, 'colorB')}
+						/>
+						<label htmlFor="color-b-name">Target color name</label>
+						<input
+							id="color-b-name"
+							name="color-b-name"
+							type="text"
+							value={state.colorB.name}
+							onChange={(event) => handleNames(event.target.value, 'colorB')}
+						/>
+					</fieldset>
+					<button type="submit">Add Swatch</button>
+				</form>
+			)}
+		</div>
 	);
 };
 

@@ -126,6 +126,7 @@ const ColorFromImage = ({
 			naturalHeight * scale,
 		);
 		setImageData(ctx.getImageData(0, 0, width, IMAGE_HEIGHT).data);
+		if (!selecting) setSelecting('colorA');
 	};
 
 	const handleSelectionClick = (currentColor: 'colorA' | 'colorB') => {
@@ -137,7 +138,10 @@ const ColorFromImage = ({
 	};
 
 	const handleCanvasClick: MouseEventHandler<HTMLCanvasElement> = (event) => {
-		if (!selecting) return;
+		if (!selecting) {
+			setSelecting('colorA');
+			return;
+		}
 
 		const backgroundColor =
 			viewFinder.background === 'transparent'
@@ -145,6 +149,7 @@ const ColorFromImage = ({
 				: viewFinder.background;
 
 		onInput(backgroundColor, selecting);
+		setSelecting(selecting === 'colorA' ? 'colorB' : null);
 	};
 
 	const getCanvasColor = (
@@ -299,7 +304,7 @@ const ColorFromImage = ({
 								if (event.target.checked) handleSelectionClick('colorA');
 							}}
 						/>
-						First color
+						Start color
 					</label>
 					<label htmlFor="selectingColorB">
 						<input
@@ -312,7 +317,7 @@ const ColorFromImage = ({
 								if (event.target.checked) handleSelectionClick('colorB');
 							}}
 						/>
-						Second color
+						Target color
 					</label>
 				</div>
 				<canvas
