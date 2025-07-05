@@ -1,8 +1,48 @@
 .color-input {
 	margin: var(--gap);
-	display: flex;
-	flex-flow: column;
-	gap: 4px;
+
+	@media screen and (min-width: 920px) {
+		margin-top: 16px;
+	}
+
+	.image-picker,
+	.form-part {
+		display: flex;
+		flex-flow: column;
+		gap: 4px;
+	}
+
+	form {
+		display: flex;
+		flex-flow: column;
+		gap: 4px;
+
+		@media screen and (min-width: 920px) {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			grid-gap: 4px 16px;
+			grid-template-areas:
+				'title title'
+				'image form'
+				'submit submit';
+
+			h2 {
+				grid-area: title;
+			}
+
+			.image-picker {
+				grid-area: image;
+			}
+
+			.form-part {
+				grid-area: form;
+			}
+
+			button {
+				grid-area: submit;
+			}
+		}
+	}
 
 	input {
 		border-radius: 4px;
@@ -40,4 +80,8 @@
 			opacity: 0.7;
 		}
 	}
+}
+
+.color-add {
+	width: 100%;
 }

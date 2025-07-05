@@ -12,6 +12,8 @@ button {
 
 body {
 	background: var(--color-surface);
+	width: 100svw;
+	display: flex;
 
 	&.prevent-scroll {
 		height: 100svh;
@@ -25,14 +27,26 @@ body {
 	--swatch-width: 160px;
 	font-family: 'Lato', helvetica, arial, sans-serif;
 	color: var(--color-text);
-	width: 100vw;
-	display: flex;
-	justify-content: center;
+	width: 100%;
+	overflow-x: clip;
 }
 
 .app {
-	max-width: calc(var(--swatch-width) * 2 + 50px);
-	padding-top: 20px;
+	width: 100%;
+	max-width: calc(var(--swatch-width) * 2 + var(--padding) * 5);
+	padding: 20px 0;
+	margin: 0 auto;
+
+	@media screen and (min-width: 920px) {
+		max-width: calc(var(--swatch-width) * 4 + var(--padding) * 8 + var(--gap));
+	}
+
+	& > {
+		h1,
+		h2 {
+			margin: var(--gap);
+		}
+	}
 }
 
 .cyan,
@@ -84,7 +98,15 @@ body {
 	font-size: 13px;
 }
 
-#root h1 {
-	margin: var(--gap);
-	font-size: var(--text-large);
+#root {
+	h1 {
+		font-size: var(--text-extra-large);
+	}
+	h2 {
+		font-size: var(--text-large);
+	}
+}
+
+fieldset {
+	border: none;
 }
