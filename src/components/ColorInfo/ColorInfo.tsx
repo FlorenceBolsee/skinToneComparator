@@ -1,5 +1,6 @@
 import cmyk2hsl from '../../utils/cmyk2hsl';
 import skinCategoryPicker from '../../utils/skinCategoryPicker';
+import { getWhite } from '../ColorPair/ColorPair';
 import './ColorInfo.scss';
 
 export type Color = {
@@ -18,68 +19,6 @@ const LABELS = {
 	y: 'Yellow',
 	k: 'Black',
 	w: 'White',
-};
-
-const getWhite = (cmyk: { c: number; m: number; y: number; k: number }) =>
-	100 - Object.values(cmyk).reduce((acc, curr) => acc + curr, 0);
-
-const getCorrector = (cmyk: {
-	c: number;
-	m: number;
-	y: number;
-	k: number;
-	w: number;
-}) => {
-	const { c, m, y, k, w } = cmyk;
-	const needsMagenta = m < -1;
-	const needsYellow = y < -1;
-	const needsBlack = Math.min(c, k) < -1;
-	const needsWhite = w < -1;
-
-	if (needsBlack && needsMagenta && needsYellow) {
-		return needsWhite ? 'beige' : 'brown';
-	}
-
-	if (needsBlack && !needsMagenta && !needsYellow) {
-		return 'blue';
-	}
-
-	if (needsYellow && !needsMagenta && !needsBlack) {
-		return 'yellow';
-	}
-
-	if (needsMagenta && !needsYellow && !needsBlack) {
-		return needsWhite ? 'pink' : 'magenta';
-	}
-
-	if (needsBlack && needsMagenta && !needsYellow) {
-		return needsWhite ? 'lavender' : 'purple';
-	}
-
-	if (needsYellow && needsBlack && !needsMagenta) {
-		return 'green';
-	}
-
-	if (needsYellow && needsMagenta && !needsBlack) {
-		return needsWhite ? 'peach' : 'orange';
-	}
-
-	if (needsWhite) {
-		const largest = Math.max(c, m, y, k);
-		const restMagenta = Math.max(m - largest, -100);
-		const restYellow = Math.max(y - largest, -100);
-		const restBlack = Math.max(Math.max(c, k) - largest, -100);
-
-		return getCorrector({
-			c: 0,
-			m: restMagenta,
-			y: restYellow,
-			k: restBlack,
-			w,
-		});
-	}
-
-	return '';
 };
 
 const ColorInfo = ({ colorA, colorB }: { colorA: Color; colorB: Color }) => {
@@ -152,12 +91,6 @@ const ColorInfo = ({ colorA, colorB }: { colorA: Color; colorB: Color }) => {
 					</li>
 				))}
 			</ul>
-			{getCorrector(differences).length > 0 && (
-				<p className="corrector-info">
-					<strong>Corrector shade: </strong>
-					<span>{getCorrector(differences)}</span>
-				</p>
-			)}
 		</div>
 	);
 };

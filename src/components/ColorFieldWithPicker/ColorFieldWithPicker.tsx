@@ -1,5 +1,12 @@
-import { ChangeEventHandler, CSSProperties, useState } from 'react';
+import { useAtom } from 'jotai';
+import {
+	ChangeEventHandler,
+	CSSProperties,
+	MouseEventHandler,
+	useState,
+} from 'react';
 import { ColorChangeHandler, SketchPicker } from 'react-color';
+import imagePickerAtom from '../../atoms/imagePickerAtom';
 import './ColorFieldWithPicker.scss';
 
 const ColorFieldWithPicker = ({
@@ -10,12 +17,13 @@ const ColorFieldWithPicker = ({
 	onInput,
 }: {
 	label: string;
-	name: string;
+	name: 'colorA' | 'colorB';
 	value: string;
 	onChange: ColorChangeHandler;
 	onInput: ChangeEventHandler<HTMLInputElement>;
 }) => {
 	const [showPicker, setShowPicker] = useState(false);
+	const [imagePicker, setImagePicker] = useAtom(imagePickerAtom);
 	const presetColors = [
 		'#f8dabe',
 		'#e9b992',
@@ -26,6 +34,14 @@ const ColorFieldWithPicker = ({
 		'#965324',
 		'#522a11',
 	];
+
+	const handleClick: MouseEventHandler<HTMLInputElement> = () => {
+		if (imagePicker.picture.length > 0) {
+			setImagePicker({ ...imagePicker, selecting: name });
+		} else {
+			setShowPicker(!showPicker);
+		}
+	};
 
 	return (
 		<fieldset
@@ -40,7 +56,7 @@ const ColorFieldWithPicker = ({
 					type="text"
 					value={value}
 					onChange={onInput}
-					onClick={() => setShowPicker(!showPicker)}
+					onClick={handleClick}
 					required={true}
 				/>
 			</label>

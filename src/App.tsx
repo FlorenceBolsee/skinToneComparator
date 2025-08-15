@@ -4,7 +4,7 @@ import ColorsFromInput from './components/ColorsFromInput/ColorsFromInput';
 const App = () => {
 	return (
 		<div className="app">
-			<h1>Skin Tones Comparator</h1>
+			<h1 className="cinzel-decorative-regular">Skin Tones Comparator</h1>
 			<p className="description">
 				Helper to find what pigments are missing to adjust a product to your
 				skin tone or to pick a color correcting shade.

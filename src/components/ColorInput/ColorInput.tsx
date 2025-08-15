@@ -95,8 +95,11 @@ const ColorInput = ({
 	return (
 		<div className="color-input">
 			{!addingSwatch && (
-				<button className="color-add" onClick={() => setAddingSwatch(true)}>
-					New Swatch +
+				<button
+					className="color-add cinzel-decorative-regular"
+					onClick={() => setAddingSwatch(true)}
+				>
+					Start creating a swatch
 				</button>
 			)}
 			{addingSwatch && (
@@ -116,7 +119,7 @@ const ColorInput = ({
 						/>
 						<ColorFieldWithPicker
 							label="Start color *"
-							name="color-a"
+							name="colorA"
 							value={state.colorA.value}
 							onChange={(color) => handleChange(color, 'colorA')}
 							onInput={(event) => handleInput(event.target.value, 'colorA')}
@@ -131,7 +134,7 @@ const ColorInput = ({
 						/>
 						<ColorFieldWithPicker
 							label="Target color *"
-							name="color-b"
+							name="colorB"
 							value={state.colorB.value}
 							onChange={(color) => handleChange(color, 'colorB')}
 							onInput={(event) => handleInput(event.target.value, 'colorB')}

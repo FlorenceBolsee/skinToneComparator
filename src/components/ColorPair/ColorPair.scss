@@ -24,4 +24,75 @@
 	border: none;
 	padding: 0;
 	z-index: 1;
+	background: none;
+}
+
+.corrector-info {
+	--corrector-label-color: var(--color-text);
+	position: relative;
+	font-size: 16px;
+	margin-top: var(--gap);
+	display: inline-flex;
+	align-items: flex-end;
+	gap: var(--gap);
+	height: 22px;
+
+	&:has(.corrector-preview--brown),
+	&:has(.corrector-preview--blue),
+	&:has(.corrector-preview--purple) {
+		--corrector-label-color: var(--color-border);
+	}
+}
+
+.corrector-label {
+	color: var(--corrector-label-color);
+	position: relative;
+	text-align: center;
+	height: 100%;
+	width: 82px;
+	z-index: 1;
+	text-transform: capitalize;
+}
+
+.corrector-preview {
+	position: absolute;
+	height: 100%;
+	width: 82px;
+	top: 0;
+	right: 0;
+	z-index: 0;
+
+	&--beige {
+		fill: #f5e7d7;
+	}
+	&--brown {
+		fill: #87551c;
+	}
+	&--blue {
+		fill: blue;
+	}
+	&--yellow {
+		fill: #ffe057;
+	}
+	&--pink {
+		fill: #ffccf1;
+	}
+	&--magenta {
+		fill: magenta;
+	}
+	&--lavender {
+		fill: #ecc7ff;
+	}
+	&--purple {
+		fill: #ca61ff;
+	}
+	&--green {
+		fill: #8adeaa;
+	}
+	&--peach {
+		fill: peachpuff;
+	}
+	&--orange {
+		fill: #ffa852;
+	}
 }

@@ -1,4 +1,5 @@
 @import url('./styles/variables.scss');
+@import url('./styles/typography.scss');
 
 * {
 	padding: 0;
@@ -96,11 +97,20 @@ body {
 .description {
 	margin: var(--gap);
 	font-size: 13px;
+
+	@media screen and (min-width: 920px) {
+		font-size: 16px;
+		text-align: center;
+	}
 }
 
 #root {
 	h1 {
 		font-size: var(--text-extra-large);
+
+		@media screen and (min-width: 920px) {
+			text-align: center;
+		}
 	}
 	h2 {
 		font-size: var(--text-large);
@@ -109,4 +119,15 @@ body {
 
 fieldset {
 	border: none;
+}
+
+.sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	border: 0;
 }

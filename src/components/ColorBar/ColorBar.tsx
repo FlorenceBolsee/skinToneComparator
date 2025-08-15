@@ -33,7 +33,7 @@ const ColorBar = ({
 					height={fullHeight}
 					x="0"
 					y="0"
-					fill="#ccc"
+					fill="var(--color-crust)"
 				/>
 				<rect
 					style={{ '--bar-height': Math.round(barHeight) } as CSSProperties}

@@ -1,5 +1,6 @@
 .color-input {
 	margin: var(--gap);
+	text-align: center;
 
 	@media screen and (min-width: 920px) {
 		margin-top: 16px;
@@ -7,6 +8,7 @@
 
 	.image-picker,
 	.form-part {
+		text-align: left;
 		display: flex;
 		flex-flow: column;
 		gap: 4px;
@@ -20,11 +22,12 @@
 		@media screen and (min-width: 920px) {
 			display: grid;
 			grid-template-columns: 1fr 1fr;
+			grid-template-rows: auto auto 43px;
 			grid-gap: 4px 16px;
 			grid-template-areas:
 				'title title'
 				'image form'
-				'submit submit';
+				'image submit';
 
 			h2 {
 				grid-area: title;
@@ -64,6 +67,10 @@
 		color: var(--color-overlay);
 		transition: background 0.2s;
 
+		@media screen and (min-width: 920px) {
+			padding: 10px 20px;
+		}
+
 		&:focus-visible,
 		&.active {
 			background: var(--color-hover);
@@ -83,5 +90,9 @@
 }
 
 .color-add {
-	width: 100%;
+	font-size: 18px;
+
+	@media screen and (max-width: 719px) {
+		width: 100%;
+	}
 }

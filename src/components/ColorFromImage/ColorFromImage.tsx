@@ -1,4 +1,5 @@
 import debounce from 'debounce';
+import { useAtom } from 'jotai';
 import {
 	ChangeEvent,
 	CSSProperties,
@@ -7,6 +8,7 @@ import {
 	useState,
 	WheelEventHandler,
 } from 'react';
+import imagePickerAtom from '../../atoms/imagePickerAtom';
 import lab2rgb from '../../utils/lab2rgb';
 import { numArrayAverage } from '../../utils/numArrayAverage';
 import { numArrayMedian } from '../../utils/numArrayMedian';
@@ -22,8 +24,7 @@ const ColorFromImage = ({
 }: {
 	onInput: (value: string, currentColor: 'colorA' | 'colorB') => void;
 }) => {
-	const [selecting, setSelecting] = useState<'colorA' | 'colorB' | null>(null);
-	const [picture, setPicture] = useState('');
+	const [imagePicker, setImagePicker] = useAtom(imagePickerAtom);
 	const [viewFinder, setViewFinder] = useState({
 		background: 'transparent',
 		x: 5,
@@ -64,7 +65,10 @@ const ColorFromImage = ({
 	};
 
 	const adjustSample: WheelEventHandler<HTMLCanvasElement> = (event) => {
-		if (!selecting || !document.body.classList.contains(CLASS_FREEZE_BODY))
+		if (
+			!imagePicker.selecting ||
+			!document.body.classList.contains(CLASS_FREEZE_BODY)
+		)
 			return;
 		const newSize = sampleSize + (event.deltaY > 0 ? 4 : -4);
 		setSampleSize(Math.min(Math.max(newSize - (newSize % 2), 6), 64));
@@ -81,7 +85,7 @@ const ColorFromImage = ({
 	};
 
 	const handlePicture = (event: ChangeEvent<HTMLInputElement>) => {
-		setPicture(event.target.value);
+		setImagePicker({ ...imagePicker, picture: event.target.value });
 		const files = event.target.files;
 
 		if (FileReader && files && files.length) {
@@ -126,7 +130,8 @@ const ColorFromImage = ({
 			naturalHeight * scale,
 		);
 		setImageData(ctx.getImageData(0, 0, width, IMAGE_HEIGHT).data);
-		if (!selecting) setSelecting('colorA');
+		if (!imagePicker.selecting)
+			setImagePicker({ ...imagePicker, selecting: 'colorA' });
 	};
 
 	const handleSelectionClick = (currentColor: 'colorA' | 'colorB') => {
@@ -134,12 +139,12 @@ const ColorFromImage = ({
 			...viewFinder,
 			background: 'transparent',
 		});
-		setSelecting(currentColor);
+		setImagePicker({ ...imagePicker, selecting: currentColor });
 	};
 
 	const handleCanvasClick: MouseEventHandler<HTMLCanvasElement> = (event) => {
-		if (!selecting) {
-			setSelecting('colorA');
+		if (!imagePicker.selecting) {
+			setImagePicker({ ...imagePicker, selecting: 'colorA' });
 			return;
 		}
 
@@ -148,14 +153,17 @@ const ColorFromImage = ({
 				? getCanvasColor(event)
 				: viewFinder.background;
 
-		onInput(backgroundColor, selecting);
-		setSelecting(selecting === 'colorA' ? 'colorB' : null);
+		onInput(backgroundColor, imagePicker.selecting);
+		setImagePicker({
+			...imagePicker,
+			selecting: imagePicker.selecting === 'colorA' ? 'colorB' : null,
+		});
 	};
 
 	const getCanvasColor = (
 		event: React.MouseEvent<HTMLCanvasElement, MouseEvent>,
 	) => {
-		if (!selecting || !canvasRef.current || !imageData)
+		if (!imagePicker.selecting || !canvasRef.current || !imageData)
 			return viewFinder.background;
 
 		const { pageX, pageY } = event;
@@ -237,12 +245,12 @@ const ColorFromImage = ({
 				type="file"
 				name="image"
 				id="image"
-				value={picture}
+				value={imagePicker.picture}
 				onChange={handlePicture}
 			/>
 			<fieldset
 				ref={containerRef}
-				className={`image-container${selecting ? ' color-picking' : ''}${picture.length > 0 ? ' show' : ''}`}
+				className={`image-container${imagePicker.selecting ? ' color-picking' : ''}${imagePicker.picture.length > 0 ? ' show' : ''}`}
 			>
 				<legend>Select from Picture</legend>
 
@@ -267,7 +275,7 @@ const ColorFromImage = ({
 					style={{ '--color-input': viewFinder.background } as CSSProperties}
 				></div>
 
-				{!!selecting && (
+				{!!imagePicker.selecting && (
 					<>
 						<button
 							onClick={(event) => {
@@ -299,7 +307,7 @@ const ColorFromImage = ({
 							id="selectingColorA"
 							name="selecting"
 							value="colorA"
-							checked={selecting === 'colorA'}
+							checked={imagePicker.selecting === 'colorA'}
 							onChange={(event) => {
 								if (event.target.checked) handleSelectionClick('colorA');
 							}}
@@ -312,7 +320,7 @@ const ColorFromImage = ({
 							id="selectingColorB"
 							name="selecting"
 							value="colorB"
-							checked={selecting === 'colorB'}
+							checked={imagePicker.selecting === 'colorB'}
 							onChange={(event) => {
 								if (event.target.checked) handleSelectionClick('colorB');
 							}}

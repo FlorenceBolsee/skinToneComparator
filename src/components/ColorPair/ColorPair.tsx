@@ -1,7 +1,74 @@
+import BrushStroke from '@assets/brush-stroke.svg?react';
 import { ReactNode } from 'react';
 import ColorInfo, { Color } from '../ColorInfo/ColorInfo';
 import Tooltip from '../Tooltip/Tooltip';
 import './ColorPair.scss';
+
+export const getWhite = (cmyk: {
+	c: number;
+	m: number;
+	y: number;
+	k: number;
+}) => 100 - Object.values(cmyk).reduce((acc, curr) => acc + curr, 0);
+
+const getCorrector = (cmyk: {
+	c: number;
+	m: number;
+	y: number;
+	k: number;
+	w: number;
+}) => {
+	const { c, m, y, k, w } = cmyk;
+	const needsMagenta = m < 0;
+	const needsYellow = y < 0;
+	const needsBlack = Math.min(c, k) < 0;
+	const needsWhite = w < 0;
+
+	if (needsBlack && needsMagenta && needsYellow) {
+		return needsWhite ? 'beige' : 'brown';
+	}
+
+	if (needsBlack && !needsMagenta && !needsYellow) {
+		return 'blue';
+	}
+
+	if (needsYellow && !needsMagenta && !needsBlack) {
+		return 'yellow';
+	}
+
+	if (needsMagenta && !needsYellow && !needsBlack) {
+		return needsWhite ? 'pink' : 'magenta';
+	}
+
+	if (needsBlack && needsMagenta && !needsYellow) {
+		return needsWhite ? 'lavender' : 'purple';
+	}
+
+	if (needsYellow && needsBlack && !needsMagenta) {
+		return 'green';
+	}
+
+	if (needsYellow && needsMagenta && !needsBlack) {
+		return needsWhite ? 'peach' : 'orange';
+	}
+
+	if (needsWhite) {
+		const largest = Math.max(c, m, y, k);
+		const restMagenta = Math.max(m - largest, -100);
+		const restYellow = Math.max(y - largest, -100);
+		const restBlack = Math.max(Math.max(c, k) - largest, -100);
+
+		return getCorrector({
+			c: 0,
+			m: restMagenta,
+			y: restYellow,
+			k: restBlack,
+			w,
+		});
+	}
+
+	return '';
+};
 
 const ColorPair = ({
 	title,
@@ -16,6 +83,18 @@ const ColorPair = ({
 	colorB: Color;
 	children: ReactNode[];
 }) => {
+	const differences = {
+		c: colorA.cmyk.c - colorB.cmyk.c,
+		m: colorA.cmyk.m - colorB.cmyk.m,
+		y: colorA.cmyk.y - colorB.cmyk.y,
+		k: colorA.cmyk.k - colorB.cmyk.k,
+		w: getWhite(colorA.cmyk) - getWhite(colorB.cmyk),
+	};
+
+	console.log(differences);
+
+	const corrector = getCorrector(differences);
+
 	return (
 		<div className="color-pair">
 			{onDelete && (
@@ -39,6 +118,17 @@ const ColorPair = ({
 			</h2>
 			{[...children][0]}
 			{[...children][1]}
+			{corrector !== '' && (
+				<p className="corrector-info">
+					<strong>Corrector shade: </strong>
+					<span className="corrector-label cinzel-decorative-regular">
+						{corrector}
+					</span>
+					<BrushStroke
+						className={`corrector-preview corrector-preview--${corrector}`}
+					/>
+				</p>
+			)}
 		</div>
 	);
 };
