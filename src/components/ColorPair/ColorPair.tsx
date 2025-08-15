@@ -91,8 +91,6 @@ const ColorPair = ({
 		w: getWhite(colorA.cmyk) - getWhite(colorB.cmyk),
 	};
 
-	console.log(differences);
-
 	const corrector = getCorrector(differences);
 
 	return (
