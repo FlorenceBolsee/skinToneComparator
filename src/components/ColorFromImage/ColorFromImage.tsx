@@ -1,42 +1,70 @@
 import debounce from 'debounce';
-import { useAtom } from 'jotai';
+import { useAtom, useAtomValue } from 'jotai';
 import {
 	ChangeEvent,
 	CSSProperties,
 	MouseEventHandler,
+	useEffect,
 	useRef,
 	useState,
 	WheelEventHandler,
 } from 'react';
+import { ColorResult } from 'react-color';
 import imagePickerAtom from '../../atoms/imagePickerAtom';
+import swatchAtom from '../../atoms/swatchAtom';
 import lab2rgb from '../../utils/lab2rgb';
 import { numArrayAverage } from '../../utils/numArrayAverage';
 import { numArrayMedian } from '../../utils/numArrayMedian';
 import rgb2hex from '../../utils/rgb2hex';
 import { rgb2lab } from '../../utils/rgb2lab';
+import ColorFieldWithPicker from '../ColorFieldWithPicker/ColorFieldWithPicker';
 import './ColorFromImage.scss';
 
 const IMAGE_HEIGHT = 354;
 const CLASS_FREEZE_BODY = 'prevent-scroll';
 
 const ColorFromImage = ({
-	onInput,
+	currentColor,
+	handleInput,
+	handleChange,
+	handleNames,
+	isActive,
 }: {
-	onInput: (value: string, currentColor: 'colorA' | 'colorB') => void;
+	currentColor: 'colorA' | 'colorB';
+	handleInput: (value: string, currentColor: 'colorA' | 'colorB') => void;
+	handleChange: (color: ColorResult, currentColor: 'colorA' | 'colorB') => void;
+	handleNames: (value: string, stateKey: 'colorA' | 'colorB' | 'title') => void;
+	isActive: boolean;
 }) => {
+	const state = useAtomValue(swatchAtom);
 	const [imagePicker, setImagePicker] = useAtom(imagePickerAtom);
 	const [viewFinder, setViewFinder] = useState({
 		background: 'transparent',
 		x: 5,
 		y: 5,
 	});
-	const [imageData, setImageData] =
-		useState<Uint8ClampedArray<ArrayBufferLike>>();
 	const [sampleSize, setSampleSize] = useState(10);
 	const [useAverage, setUserAverage] = useState(false);
+	const [loaded, setLoaded] = useState(false);
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const imageRef = useRef<HTMLImageElement>(null);
 	const containerRef = useRef<HTMLFieldSetElement>(null);
+	const nameInputId =
+		currentColor === 'colorA' ? 'color-a-name' : 'color-b-name';
+
+	useEffect(() => {
+		if (!imagePicker.picture || !imageRef.current || loaded) return;
+
+		imageRef.current.src = imagePicker.picture;
+
+		if (imagePicker.imageData && imagePicker.file) {
+			const fileReader = new FileReader();
+			fileReader.onload = () => showImage(fileReader);
+			fileReader.readAsDataURL(imagePicker.file);
+		}
+
+		setImagePicker({ ...imagePicker, selecting: currentColor });
+	}, [isActive]);
 
 	const getScrollbarWidth = () =>
 		window.innerWidth - document.documentElement.clientWidth;
@@ -85,10 +113,14 @@ const ColorFromImage = ({
 	};
 
 	const handlePicture = (event: ChangeEvent<HTMLInputElement>) => {
-		setImagePicker({ ...imagePicker, picture: event.target.value });
 		const files = event.target.files;
 
-		if (FileReader && files && files.length) {
+		if (FileReader && files && files.length && files[0]) {
+			setImagePicker({
+				...imagePicker,
+				picture: event.target.value,
+				file: files[0],
+			});
 			const fileReader = new FileReader();
 			fileReader.onload = () => showImage(fileReader);
 			if (files[0]) fileReader.readAsDataURL(files[0]);
@@ -99,6 +131,7 @@ const ColorFromImage = ({
 		if (!imageRef.current || !canvasRef.current || !containerRef.current)
 			return;
 		const { clientWidth: width } = containerRef.current;
+		if (!width) return;
 		const { naturalWidth, naturalHeight } = imageRef.current;
 		canvasRef.current.width = width;
 		canvasRef.current.height = IMAGE_HEIGHT;
@@ -129,22 +162,17 @@ const ColorFromImage = ({
 			naturalWidth * scale,
 			naturalHeight * scale,
 		);
-		setImageData(ctx.getImageData(0, 0, width, IMAGE_HEIGHT).data);
-		if (!imagePicker.selecting)
-			setImagePicker({ ...imagePicker, selecting: 'colorA' });
-	};
-
-	const handleSelectionClick = (currentColor: 'colorA' | 'colorB') => {
-		setViewFinder({
-			...viewFinder,
-			background: 'transparent',
+		setImagePicker({
+			...imagePicker,
+			imageData: ctx.getImageData(0, 0, width, IMAGE_HEIGHT).data,
+			selecting: currentColor,
 		});
-		setImagePicker({ ...imagePicker, selecting: currentColor });
+		setLoaded(true);
 	};
 
 	const handleCanvasClick: MouseEventHandler<HTMLCanvasElement> = (event) => {
 		if (!imagePicker.selecting) {
-			setImagePicker({ ...imagePicker, selecting: 'colorA' });
+			setImagePicker({ ...imagePicker, selecting: currentColor });
 			return;
 		}
 
@@ -153,17 +181,17 @@ const ColorFromImage = ({
 				? getCanvasColor(event)
 				: viewFinder.background;
 
-		onInput(backgroundColor, imagePicker.selecting);
+		handleInput(backgroundColor, imagePicker.selecting);
 		setImagePicker({
 			...imagePicker,
-			selecting: imagePicker.selecting === 'colorA' ? 'colorB' : null,
+			selecting: currentColor,
 		});
 	};
 
 	const getCanvasColor = (
 		event: React.MouseEvent<HTMLCanvasElement, MouseEvent>,
 	) => {
-		if (!imagePicker.selecting || !canvasRef.current || !imageData)
+		if (!imagePicker.selecting || !canvasRef.current || !imagePicker.imageData)
 			return viewFinder.background;
 
 		const { pageX, pageY } = event;
@@ -193,11 +221,15 @@ const ColorFromImage = ({
 			const dataX = i % dataLine;
 			if (dataX > dataStartCol && dataX <= dataEndCol) {
 				pixels += 1;
-				if (imageData[i] && imageData[i + 1] && imageData[i + 2]) {
+				if (
+					imagePicker.imageData[i] &&
+					imagePicker.imageData[i + 1] &&
+					imagePicker.imageData[i + 2]
+				) {
 					const { l, a, b } = rgb2lab({
-						r: imageData[i] as number,
-						g: imageData[i + 1] as number,
-						b: imageData[i + 2] as number,
+						r: imagePicker.imageData[i] as number,
+						g: imagePicker.imageData[i + 1] as number,
+						b: imagePicker.imageData[i + 2] as number,
 					});
 					ls.push(l);
 					as.push(a);
@@ -245,7 +277,6 @@ const ColorFromImage = ({
 				type="file"
 				name="image"
 				id="image"
-				value={imagePicker.picture}
 				onChange={handlePicture}
 			/>
 			<fieldset
@@ -300,34 +331,6 @@ const ColorFromImage = ({
 					</>
 				)}
 
-				<div className="radio-input">
-					<label htmlFor="selectingColorA">
-						<input
-							type="radio"
-							id="selectingColorA"
-							name="selecting"
-							value="colorA"
-							checked={imagePicker.selecting === 'colorA'}
-							onChange={(event) => {
-								if (event.target.checked) handleSelectionClick('colorA');
-							}}
-						/>
-						Start color
-					</label>
-					<label htmlFor="selectingColorB">
-						<input
-							type="radio"
-							id="selectingColorB"
-							name="selecting"
-							value="colorB"
-							checked={imagePicker.selecting === 'colorB'}
-							onChange={(event) => {
-								if (event.target.checked) handleSelectionClick('colorB');
-							}}
-						/>
-						Target color
-					</label>
-				</div>
 				<canvas
 					ref={canvasRef}
 					height="0"
@@ -349,6 +352,23 @@ const ColorFromImage = ({
 				></div>
 			</fieldset>
 			<img className="image-pick" ref={imageRef} alt="" onLoad={getImageData} />
+			<ColorFieldWithPicker
+				label={`${currentColor === 'colorA' ? 'Start' : 'Target'} color *`}
+				name={currentColor}
+				value={state[currentColor].value}
+				onChange={(color) => handleChange(color, currentColor)}
+				onInput={(event) => handleInput(event.target.value, currentColor)}
+			/>
+			<label htmlFor={nameInputId}>
+				{currentColor === 'colorA' ? 'Start' : 'Target'} color name
+			</label>
+			<input
+				id={nameInputId}
+				name={nameInputId}
+				type="text"
+				value={state[currentColor].name}
+				onChange={(event) => handleNames(event.target.value, currentColor)}
+			/>
 		</>
 	);
 };

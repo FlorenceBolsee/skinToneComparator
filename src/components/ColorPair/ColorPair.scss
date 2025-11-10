@@ -17,6 +17,21 @@
 	}
 }
 
+.color-pair-separator {
+	display: flex;
+	justify-content: center;
+	align-items: flex-end;
+	width: var(--arrow-width);
+}
+
+.color-pair-arrow {
+	display: inline-flex;
+	justify-content: center;
+	align-items: center;
+	height: var(--color-height);
+	font-size: calc(var(--arrow-width) + var(--padding));
+}
+
 .color-delete {
 	position: absolute;
 	top: var(--padding);
