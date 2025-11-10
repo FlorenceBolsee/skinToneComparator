@@ -25,7 +25,11 @@
 		"noImplicitOverride": false,
 		"noImplicitReturns": true,
 		"noUncheckedIndexedAccess": true,
-		"exactOptionalPropertyTypes": true
+		"exactOptionalPropertyTypes": true,
+		"types": ["vite-plugin-svgr/client"],
+		"paths": {
+			"@assets/*": ["./src/assets/*"]
+		}
 	},
 	"include": ["src"],
 	"references": [{ "path": "./tsconfig.node.json" }]

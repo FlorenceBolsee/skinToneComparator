@@ -1,41 +1,70 @@
 import debounce from 'debounce';
+import { useAtom, useAtomValue } from 'jotai';
 import {
 	ChangeEvent,
 	CSSProperties,
 	MouseEventHandler,
+	useEffect,
 	useRef,
 	useState,
 	WheelEventHandler,
 } from 'react';
+import { ColorResult } from 'react-color';
+import imagePickerAtom from '../../atoms/imagePickerAtom';
+import swatchAtom from '../../atoms/swatchAtom';
 import lab2rgb from '../../utils/lab2rgb';
 import { numArrayAverage } from '../../utils/numArrayAverage';
 import { numArrayMedian } from '../../utils/numArrayMedian';
 import rgb2hex from '../../utils/rgb2hex';
 import { rgb2lab } from '../../utils/rgb2lab';
+import ColorFieldWithPicker from '../ColorFieldWithPicker/ColorFieldWithPicker';
 import './ColorFromImage.scss';
 
 const IMAGE_HEIGHT = 354;
 const CLASS_FREEZE_BODY = 'prevent-scroll';
 
 const ColorFromImage = ({
-	onInput,
+	currentColor,
+	handleInput,
+	handleChange,
+	handleNames,
+	isActive,
 }: {
-	onInput: (value: string, currentColor: 'colorA' | 'colorB') => void;
+	currentColor: 'colorA' | 'colorB';
+	handleInput: (value: string, currentColor: 'colorA' | 'colorB') => void;
+	handleChange: (color: ColorResult, currentColor: 'colorA' | 'colorB') => void;
+	handleNames: (value: string, stateKey: 'colorA' | 'colorB' | 'title') => void;
+	isActive: boolean;
 }) => {
-	const [selecting, setSelecting] = useState<'colorA' | 'colorB' | null>(null);
-	const [picture, setPicture] = useState('');
+	const state = useAtomValue(swatchAtom);
+	const [imagePicker, setImagePicker] = useAtom(imagePickerAtom);
 	const [viewFinder, setViewFinder] = useState({
 		background: 'transparent',
 		x: 5,
 		y: 5,
 	});
-	const [imageData, setImageData] =
-		useState<Uint8ClampedArray<ArrayBufferLike>>();
 	const [sampleSize, setSampleSize] = useState(10);
 	const [useAverage, setUserAverage] = useState(false);
+	const [loaded, setLoaded] = useState(false);
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const imageRef = useRef<HTMLImageElement>(null);
 	const containerRef = useRef<HTMLFieldSetElement>(null);
+	const nameInputId =
+		currentColor === 'colorA' ? 'color-a-name' : 'color-b-name';
+
+	useEffect(() => {
+		if (!imagePicker.picture || !imageRef.current || loaded) return;
+
+		imageRef.current.src = imagePicker.picture;
+
+		if (imagePicker.imageData && imagePicker.file) {
+			const fileReader = new FileReader();
+			fileReader.onload = () => showImage(fileReader);
+			fileReader.readAsDataURL(imagePicker.file);
+		}
+
+		setImagePicker({ ...imagePicker, selecting: currentColor });
+	}, [isActive]);
 
 	const getScrollbarWidth = () =>
 		window.innerWidth - document.documentElement.clientWidth;
@@ -64,7 +93,10 @@ const ColorFromImage = ({
 	};
 
 	const adjustSample: WheelEventHandler<HTMLCanvasElement> = (event) => {
-		if (!selecting || !document.body.classList.contains(CLASS_FREEZE_BODY))
+		if (
+			!imagePicker.selecting ||
+			!document.body.classList.contains(CLASS_FREEZE_BODY)
+		)
 			return;
 		const newSize = sampleSize + (event.deltaY > 0 ? 4 : -4);
 		setSampleSize(Math.min(Math.max(newSize - (newSize % 2), 6), 64));
@@ -81,10 +113,14 @@ const ColorFromImage = ({
 	};
 
 	const handlePicture = (event: ChangeEvent<HTMLInputElement>) => {
-		setPicture(event.target.value);
 		const files = event.target.files;
 
-		if (FileReader && files && files.length) {
+		if (FileReader && files && files.length && files[0]) {
+			setImagePicker({
+				...imagePicker,
+				picture: event.target.value,
+				file: files[0],
+			});
 			const fileReader = new FileReader();
 			fileReader.onload = () => showImage(fileReader);
 			if (files[0]) fileReader.readAsDataURL(files[0]);
@@ -95,6 +131,7 @@ const ColorFromImage = ({
 		if (!imageRef.current || !canvasRef.current || !containerRef.current)
 			return;
 		const { clientWidth: width } = containerRef.current;
+		if (!width) return;
 		const { naturalWidth, naturalHeight } = imageRef.current;
 		canvasRef.current.width = width;
 		canvasRef.current.height = IMAGE_HEIGHT;
@@ -125,100 +162,112 @@ const ColorFromImage = ({
 			naturalWidth * scale,
 			naturalHeight * scale,
 		);
-		setImageData(ctx.getImageData(0, 0, width, IMAGE_HEIGHT).data);
-	};
-
-	const handleSelectionClick = (currentColor: 'colorA' | 'colorB') => {
-		setViewFinder({
-			...viewFinder,
-			background: 'transparent',
+		setImagePicker({
+			...imagePicker,
+			imageData: ctx.getImageData(0, 0, width, IMAGE_HEIGHT).data,
+			selecting: currentColor,
 		});
-		setSelecting(currentColor);
+		setLoaded(true);
 	};
 
-	const handleCanvasClick: MouseEventHandler<HTMLCanvasElement> = () => {
-		if (!selecting || viewFinder.background === 'transparent') return;
+	const handleCanvasClick: MouseEventHandler<HTMLCanvasElement> = (event) => {
+		if (!imagePicker.selecting) {
+			setImagePicker({ ...imagePicker, selecting: currentColor });
+			return;
+		}
 
-		onInput(viewFinder.background, selecting);
+		const backgroundColor =
+			viewFinder.background === 'transparent'
+				? getCanvasColor(event)
+				: viewFinder.background;
+
+		handleInput(backgroundColor, imagePicker.selecting);
+		setImagePicker({
+			...imagePicker,
+			selecting: currentColor,
+		});
 	};
 
-	const handleCanvasHover: MouseEventHandler<HTMLCanvasElement> = debounce(
-		(event) => {
-			if (!selecting || !canvasRef.current || !imageData) return;
+	const getCanvasColor = (
+		event: React.MouseEvent<HTMLCanvasElement, MouseEvent>,
+	) => {
+		if (!imagePicker.selecting || !canvasRef.current || !imagePicker.imageData)
+			return viewFinder.background;
 
-			const { pageX, pageY } = event;
+		const { pageX, pageY } = event;
 
-			const { top, left, width, height } =
-				canvasRef.current.getBoundingClientRect();
+		const { top, left, width, height } =
+			canvasRef.current.getBoundingClientRect();
 
-			const x = Math.round(
-				Math.min(Math.max(pageX - left - scrollX, 0), width),
-			);
-			const y = Math.round(
-				Math.min(Math.max(pageY - top - scrollY, 0), height),
-			);
+		const x = Math.round(Math.min(Math.max(pageX - left - scrollX, 0), width));
+		const y = Math.round(Math.min(Math.max(pageY - top - scrollY, 0), height));
 
-			const dataLine = width * 4;
-			const dataStartCol = Math.max(x * 4 - (4 * sampleSize) / 2, 0);
-			const dataStartIndex =
-				Math.max(y * dataLine - (sampleSize / 2) * dataLine, 0) + dataStartCol;
-			const dataSampleWidth = sampleSize * 4;
-			const dataEndCol = Math.min(dataStartCol + dataSampleWidth, dataLine);
-			const dataEndIndex =
-				dataStartIndex + sampleSize * dataLine + dataSampleWidth;
+		const dataLine = width * 4;
+		const dataStartCol = Math.max(x * 4 - (4 * sampleSize) / 2, 0);
+		const dataStartIndex =
+			Math.max(y * dataLine - (sampleSize / 2) * dataLine, 0) + dataStartCol;
+		const dataSampleWidth = sampleSize * 4;
+		const dataEndCol = Math.min(dataStartCol + dataSampleWidth, dataLine);
+		const dataEndIndex =
+			dataStartIndex + sampleSize * dataLine + dataSampleWidth;
 
-			const ls: number[] = [];
-			const as: number[] = [];
-			const bs: number[] = [];
+		const ls: number[] = [];
+		const as: number[] = [];
+		const bs: number[] = [];
 
-			let pixels = 0;
+		let pixels = 0;
 
-			for (let i = dataEndIndex; i >= dataStartIndex; i -= 4) {
-				const dataX = i % dataLine;
-				if (dataX > dataStartCol && dataX <= dataEndCol) {
-					pixels += 1;
-					if (imageData[i] && imageData[i + 1] && imageData[i + 2]) {
-						const { l, a, b } = rgb2lab({
-							r: imageData[i] as number,
-							g: imageData[i + 1] as number,
-							b: imageData[i + 2] as number,
-						});
-						ls.push(l);
-						as.push(a);
-						bs.push(b);
-					}
+		for (let i = dataEndIndex; i >= dataStartIndex; i -= 4) {
+			const dataX = i % dataLine;
+			if (dataX > dataStartCol && dataX <= dataEndCol) {
+				pixels += 1;
+				if (
+					imagePicker.imageData[i] &&
+					imagePicker.imageData[i + 1] &&
+					imagePicker.imageData[i + 2]
+				) {
+					const { l, a, b } = rgb2lab({
+						r: imagePicker.imageData[i] as number,
+						g: imagePicker.imageData[i + 1] as number,
+						b: imagePicker.imageData[i + 2] as number,
+					});
+					ls.push(l);
+					as.push(a);
+					bs.push(b);
 				}
 			}
+		}
 
-			const lAverage = numArrayAverage(ls);
-			const aAverage = numArrayAverage(as);
-			const bAverage = numArrayAverage(bs);
+		const lAverage = numArrayAverage(ls);
+		const aAverage = numArrayAverage(as);
+		const bAverage = numArrayAverage(bs);
 
-			const lMedian = numArrayMedian(ls);
-			const aMedian = numArrayMedian(as);
-			const bMedian = numArrayMedian(bs);
+		const lMedian = numArrayMedian(ls);
+		const aMedian = numArrayMedian(as);
+		const bMedian = numArrayMedian(bs);
 
-			const {
-				r: rAverage,
-				g: gAverage,
-				b: blueAverage,
-			} = lab2rgb({ l: lAverage, a: aAverage, b: bAverage });
-			const {
-				r: rMedian,
-				g: gMedian,
-				b: blueMedian,
-			} = lab2rgb({ l: lMedian, a: aMedian, b: bMedian });
-			const hexAverage = rgb2hex(rAverage, gAverage, blueAverage);
-			const hexMedian = rgb2hex(rMedian, gMedian, blueMedian);
+		const {
+			r: rAverage,
+			g: gAverage,
+			b: blueAverage,
+		} = lab2rgb({ l: lAverage, a: aAverage, b: bAverage });
+		const {
+			r: rMedian,
+			g: gMedian,
+			b: blueMedian,
+		} = lab2rgb({ l: lMedian, a: aMedian, b: bMedian });
+		const hexAverage = rgb2hex(rAverage, gAverage, blueAverage);
+		const hexMedian = rgb2hex(rMedian, gMedian, blueMedian);
 
-			setViewFinder({
-				background: useAverage ? hexAverage : hexMedian,
-				x: Math.min(Math.max(x, sampleSize / 2), width - sampleSize / 2),
-				y: Math.min(Math.max(y, sampleSize / 2), height - sampleSize / 2),
-			});
-		},
-		5,
-	);
+		setViewFinder({
+			background: useAverage ? hexAverage : hexMedian,
+			x: Math.min(Math.max(x, sampleSize / 2), width - sampleSize / 2),
+			y: Math.min(Math.max(y, sampleSize / 2), height - sampleSize / 2),
+		});
+		return useAverage ? hexAverage : hexMedian;
+	};
+
+	const handleCanvasHover = debounce(getCanvasColor, 5);
 
 	return (
 		<>
@@ -228,12 +277,11 @@ const ColorFromImage = ({
 				type="file"
 				name="image"
 				id="image"
-				value={picture}
 				onChange={handlePicture}
 			/>
 			<fieldset
 				ref={containerRef}
-				className={`image-container${selecting ? ' color-picking' : ''}${picture.length > 0 ? ' show' : ''}`}
+				className={`image-container${imagePicker.selecting ? ' color-picking' : ''}${imagePicker.picture.length > 0 ? ' show' : ''}`}
 			>
 				<legend>Select from Picture</legend>
 
@@ -258,13 +306,14 @@ const ColorFromImage = ({
 					style={{ '--color-input': viewFinder.background } as CSSProperties}
 				></div>
 
-				{!!selecting && (
+				{!!imagePicker.selecting && (
 					<>
 						<button
 							onClick={(event) => {
 								event.preventDefault();
 								setSampleSize(Math.min(sampleSize + 12, 64));
 							}}
+							disabled={sampleSize === 64}
 							className="target-sizing"
 						>
 							+
@@ -274,6 +323,7 @@ const ColorFromImage = ({
 								event.preventDefault();
 								setSampleSize(Math.max(sampleSize - 12, 6));
 							}}
+							disabled={sampleSize === 6}
 							className="target-sizing"
 						>
 							-
@@ -281,34 +331,6 @@ const ColorFromImage = ({
 					</>
 				)}
 
-				<div className="radio-input">
-					<label htmlFor="selectingColorA">
-						<input
-							type="radio"
-							id="selectingColorA"
-							name="selecting"
-							value="colorA"
-							checked={selecting === 'colorA'}
-							onChange={(event) => {
-								if (event.target.checked) handleSelectionClick('colorA');
-							}}
-						/>
-						First color
-					</label>
-					<label htmlFor="selectingColorB">
-						<input
-							type="radio"
-							id="selectingColorB"
-							name="selecting"
-							value="colorB"
-							checked={selecting === 'colorB'}
-							onChange={(event) => {
-								if (event.target.checked) handleSelectionClick('colorB');
-							}}
-						/>
-						Second color
-					</label>
-				</div>
 				<canvas
 					ref={canvasRef}
 					height="0"
@@ -330,6 +352,23 @@ const ColorFromImage = ({
 				></div>
 			</fieldset>
 			<img className="image-pick" ref={imageRef} alt="" onLoad={getImageData} />
+			<ColorFieldWithPicker
+				label={`${currentColor === 'colorA' ? 'Start' : 'Target'} color *`}
+				name={currentColor}
+				value={state[currentColor].value}
+				onChange={(color) => handleChange(color, currentColor)}
+				onInput={(event) => handleInput(event.target.value, currentColor)}
+			/>
+			<label htmlFor={nameInputId}>
+				{currentColor === 'colorA' ? 'Start' : 'Target'} color name
+			</label>
+			<input
+				id={nameInputId}
+				name={nameInputId}
+				type="text"
+				value={state[currentColor].name}
+				onChange={(event) => handleNames(event.target.value, currentColor)}
+			/>
 		</>
 	);
 };

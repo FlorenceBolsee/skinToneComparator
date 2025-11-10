@@ -12,8 +12,8 @@ const ColorBar = ({
 }) => {
 	const [barHeight, setBarHeight] = useState(0);
 	const shortLabel = label.charAt(0);
-	const barWidth = 10;
-	const fullHeight = 60;
+	const barWidth = 9;
+	const fullHeight = 58;
 
 	useEffect(() => {
 		setBarHeight(height * 0.6);
@@ -33,7 +33,7 @@ const ColorBar = ({
 					height={fullHeight}
 					x="0"
 					y="0"
-					fill="#ccc"
+					fill="var(--color-crust)"
 				/>
 				<rect
 					style={{ '--bar-height': Math.round(barHeight) } as CSSProperties}
