@@ -104,6 +104,7 @@ const ColorPair = ({
 						fill="currentColor"
 						viewBox="0 0 490 490"
 					>
+						<title>Delete swatch</title>
 						<path d="M11.387 490 245 255.832 478.613 490l10.826-10.826-233.63-234.178 233.63-234.185L478.613 0 245 234.161 11.387 0 .561 10.811l233.63 234.185L.561 479.174z" />
 					</svg>
 				</button>
@@ -115,6 +116,9 @@ const ColorPair = ({
 				</Tooltip>
 			</h2>
 			{[...children][0]}
+			<div className="color-pair-separator east-sea-dokdo-regular">
+				<span className="color-pair-arrow">→</span>
+			</div>
 			{[...children][1]}
 			{corrector !== '' && (
 				<p className="corrector-info">

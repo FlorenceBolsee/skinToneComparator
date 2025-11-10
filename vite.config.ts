@@ -19,5 +19,8 @@ export default defineConfig({
 		},
 	},
 	plugins: [react(), svgr()],
+	server: {
+		port: 5176,
+	},
 	base: '',
 });

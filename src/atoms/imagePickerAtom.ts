@@ -1,11 +1,16 @@
 import { atom } from 'jotai';
 
-const imagePickerAtom = atom<{
-	selecting: 'colorA' | 'colorB' | null;
-	picture: string;
-}>({
+const imagePickerAtom = atom<ImagePicker>({
 	selecting: null,
 	picture: '',
+	imageData: null,
 });
+
+export type ImagePicker = {
+	selecting: 'colorA' | 'colorB' | null;
+	picture: string;
+	imageData: Uint8ClampedArray<ArrayBufferLike> | null;
+	file?: File;
+};
 
 export default imagePickerAtom;
