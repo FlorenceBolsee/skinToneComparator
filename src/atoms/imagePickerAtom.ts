@@ -10,7 +10,6 @@ export type ImagePicker = {
 	selecting: 'colorA' | 'colorB' | null;
 	picture: string;
 	imageData: Uint8ClampedArray<ArrayBufferLike> | null;
-	fileReader?: FileReader;
 	file?: File;
 };
 
