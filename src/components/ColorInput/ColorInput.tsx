@@ -2,6 +2,7 @@ import { useAtom } from 'jotai';
 import { FormEventHandler } from 'react';
 import addingSwatchAtom from '../../atoms/addingSwatchAtom';
 import swatchAtom, { defaultState } from '../../atoms/swatchAtom';
+import deepCopy from '../../utils/deepCopy';
 import { Color } from '../ColorInfo/ColorInfo';
 import './ColorInput.scss';
 import Steps from './Steps';
@@ -31,7 +32,7 @@ const ColorInput = ({
 		newSwatch.id = String(Date.now());
 		onSubmit(newSwatch);
 		setAddingSwatch(false);
-		setState(defaultState);
+		setState(deepCopy(defaultState));
 	};
 
 	return (

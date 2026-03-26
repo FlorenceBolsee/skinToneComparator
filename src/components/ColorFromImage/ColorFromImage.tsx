@@ -12,6 +12,7 @@ import {
 import { ColorResult } from 'react-color';
 import imagePickerAtom from '../../atoms/imagePickerAtom';
 import swatchAtom from '../../atoms/swatchAtom';
+import { clamp } from '../../utils/clamp';
 import lab2rgb from '../../utils/lab2rgb';
 import { numArrayAverage } from '../../utils/numArrayAverage';
 import { numArrayMedian } from '../../utils/numArrayMedian';
@@ -46,9 +47,13 @@ const ColorFromImage = ({
 	const [sampleSize, setSampleSize] = useState(10);
 	const [useAverage, setUserAverage] = useState(false);
 	const [loaded, setLoaded] = useState(false);
+	const [isDragging, setIsDragging] = useState(false);
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const imageRef = useRef<HTMLImageElement>(null);
 	const containerRef = useRef<HTMLFieldSetElement>(null);
+	const pointerPos = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+	const canvasPos = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+	const canvasRefPos = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 	const nameInputId =
 		currentColor === 'colorA' ? 'color-a-name' : 'color-b-name';
 
@@ -127,11 +132,11 @@ const ColorFromImage = ({
 		}
 	};
 
-	const getImageData = () => {
+	const getImageData = (offsetX: number = 0, offsetY: number = 0) => {
 		if (!imageRef.current || !canvasRef.current || !containerRef.current)
-			return;
+			return { x: 0, y: 0 };
 		const { clientWidth: width } = containerRef.current;
-		if (!width) return;
+		if (!width) return { x: 0, y: 0 };
 		const { naturalWidth, naturalHeight } = imageRef.current;
 		canvasRef.current.width = width;
 		canvasRef.current.height = IMAGE_HEIGHT;
@@ -142,32 +147,58 @@ const ColorFromImage = ({
 			scale = scaleY;
 		}
 
-		const x = ((naturalWidth * scale - width) / 2) * -1;
-		const y = ((naturalHeight * scale - IMAGE_HEIGHT) / 2) * -1;
+		let { x, y } = canvasRefPos.current;
+
+		if (!x) x = ((naturalWidth * scale - width) / 2) * -1;
+		if (!y) y = ((naturalHeight * scale - IMAGE_HEIGHT) / 2) * -1;
 		const ctx = canvasRef.current.getContext('2d', {
 			willReadFrequently: true,
 		});
-		if (!ctx) return;
+		if (!ctx) return { x, y };
 		ctx.rect(0, 0, width, IMAGE_HEIGHT);
 		ctx.fillStyle = '#333';
 		ctx.fill();
+		const isPortrait =
+			naturalWidth < naturalHeight || naturalWidth * scale === width;
+		const isLandscape =
+			naturalHeight < naturalWidth || naturalHeight * scale === IMAGE_HEIGHT;
+		const newX = isPortrait
+			? 0
+			: clamp(x + offsetX, (naturalWidth * scale - width) * -1, 0);
+		const newY = isLandscape
+			? 0
+			: clamp(y + offsetY, (naturalHeight * scale - IMAGE_HEIGHT) * -1, 0);
 		ctx.drawImage(
 			imageRef.current,
-			x,
-			y,
-			naturalWidth,
-			naturalHeight,
-			x,
-			y,
+			newX,
+			newY,
 			naturalWidth * scale,
 			naturalHeight * scale,
 		);
+
 		setImagePicker({
 			...imagePicker,
 			imageData: ctx.getImageData(0, 0, width, IMAGE_HEIGHT).data,
 			selecting: currentColor,
 		});
 		setLoaded(true);
+
+		return {
+			x: newX,
+			y: newY,
+		};
+	};
+
+	const setPointerPosition = (
+		event: React.MouseEvent<HTMLCanvasElement, MouseEvent>,
+	) => {
+		if (!canvasRef.current) return;
+		const canvasRect = canvasRef.current.getBoundingClientRect();
+		const mousePos = {
+			x: event.clientX - canvasRect.x,
+			y: event.clientY - canvasRect.y,
+		};
+		pointerPos.current = mousePos;
 	};
 
 	const handleCanvasClick: MouseEventHandler<HTMLCanvasElement> = (event) => {
@@ -186,6 +217,41 @@ const ColorFromImage = ({
 			...imagePicker,
 			selecting: currentColor,
 		});
+		setPointerPosition(event);
+	};
+
+	const handleCanvasDragStart: MouseEventHandler<HTMLCanvasElement> = (
+		event,
+	) => {
+		setPointerPosition(event);
+		setIsDragging(true);
+	};
+
+	const handleCanvasDragging: MouseEventHandler<HTMLCanvasElement> = (
+		event,
+	) => {
+		if (isDragging) {
+			if (!canvasRef.current) return;
+			const canvasRect = canvasRef.current.getBoundingClientRect();
+			const oldPos = pointerPos.current;
+			const mousePos = {
+				x: event.clientX - canvasRect.x,
+				y: event.clientY - canvasRect.y,
+			};
+			if (oldPos.x === mousePos.x && oldPos.y === mousePos.y) return;
+
+			const moveX = mousePos.x - oldPos.x;
+			const moveY = mousePos.y - oldPos.y;
+
+			canvasPos.current = getImageData(moveX, moveY);
+		}
+	};
+
+	const handleCanvasDrop: MouseEventHandler<HTMLCanvasElement> = (event) => {
+		setPointerPosition(event);
+		setIsDragging(false);
+		if (!canvasPos.current) return;
+		canvasRefPos.current = canvasPos.current;
 	};
 
 	const getCanvasColor = (
@@ -238,6 +304,10 @@ const ColorFromImage = ({
 			}
 		}
 
+		if (ls.length === 0 || as.length === 0 || bs.length === 0) {
+			return viewFinder.background;
+		}
+
 		const lAverage = numArrayAverage(ls);
 		const aAverage = numArrayAverage(as);
 		const bAverage = numArrayAverage(bs);
@@ -267,7 +337,10 @@ const ColorFromImage = ({
 		return useAverage ? hexAverage : hexMedian;
 	};
 
-	const handleCanvasHover = debounce(getCanvasColor, 5);
+	const handleCanvasHover = debounce((event) => {
+		getCanvasColor(event);
+		handleCanvasDragging(event);
+	}, 5);
 
 	return (
 		<>
@@ -337,8 +410,11 @@ const ColorFromImage = ({
 					onClick={handleCanvasClick}
 					onMouseMove={handleCanvasHover}
 					onWheel={adjustSample}
+					onMouseUp={handleCanvasDrop}
 					onPointerEnter={() => freezeBody(true)}
 					onPointerLeave={() => freezeBody(false)}
+					onMouseDown={handleCanvasDragStart}
+					onMouseLeave={handleCanvasDrop}
 				></canvas>
 				<div
 					className="color-viewfinder"
@@ -351,7 +427,12 @@ const ColorFromImage = ({
 					}
 				></div>
 			</fieldset>
-			<img className="image-pick" ref={imageRef} alt="" onLoad={getImageData} />
+			<img
+				className="image-pick"
+				ref={imageRef}
+				alt=""
+				onLoad={() => getImageData()}
+			/>
 			<ColorFieldWithPicker
 				label={`${currentColor === 'colorA' ? 'Start' : 'Target'} color *`}
 				name={currentColor}

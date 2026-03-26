@@ -1,5 +1,6 @@
 import { atom } from 'jotai';
 import { SwatchState } from '../components/ColorInput/ColorInput';
+import deepCopy from '../utils/deepCopy';
 
 export const defaultState: SwatchState = {
 	id: '',
@@ -24,8 +25,8 @@ export const defaultState: SwatchState = {
 			k: 0,
 		},
 	},
-};
+} as const;
 
-const swatchAtom = atom<SwatchState>(defaultState);
+const swatchAtom = atom<SwatchState>(deepCopy(defaultState));
 
 export default swatchAtom;
