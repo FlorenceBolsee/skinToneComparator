@@ -1,6 +1,6 @@
 {
-	"name": "color-swatch",
-	"version": "0.0.0",
+	"name": "skintone-comparator",
+	"version": "0.0.1",
 	"type": "module",
 	"scripts": {
 		"dev": "vite",
