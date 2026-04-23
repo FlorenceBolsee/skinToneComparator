@@ -1,4 +1,4 @@
-import { COOL, MUTED, NEUTRAL, OLIVE, WARM } from '../consts';
+import { BLUE, COOL, NEUTRAL, OLIVE, PURPLE, WARM } from '../consts';
 
 const SKIN_CATEGORIES = [
 	{
@@ -28,19 +28,6 @@ const SKIN_CATEGORIES = [
 	},
 ];
 
-const UNDERTONES_THRESHOLDS = {
-	regular: {
-		warm: { min: 0, max: 0.55, label: WARM },
-		neutral: { min: 0.55, max: 0.65, label: NEUTRAL },
-		cool: { min: 0.65, max: 1, label: COOL },
-	},
-	olive: {
-		warm: { min: 0, max: 0.4, label: WARM },
-		neutral: { min: 0.4, max: 0.45, label: NEUTRAL },
-		cool: { min: 0.45, max: 1, label: COOL },
-	},
-};
-
 const skinCategoryPicker = (
 	cmyk: {
 		c: number;
@@ -52,8 +39,6 @@ const skinCategoryPicker = (
 ) => {
 	let skinCategory = '';
 	let undertone: string | undefined = '';
-	let isOlive = false;
-	let isMuted = false;
 
 	const { l } = hsl;
 
@@ -63,22 +48,23 @@ const skinCategoryPicker = (
 		skinCategory = label;
 
 		const magentaRatio = cmyk.m / cmyk.y;
-
-		isMuted = cmyk.k / (100 - l) > expectedBlack;
-		isOlive = magentaRatio < 0.5;
-
-		let undertoneThreshold = UNDERTONES_THRESHOLDS.regular;
+		const isOlive = magentaRatio < 0.5;
+		const isMuted = cmyk.k / (100 - l) > expectedBlack;
 
 		if (isOlive) {
-			undertoneThreshold = UNDERTONES_THRESHOLDS.olive;
+			undertone = OLIVE;
+		} else if (isMuted) {
+			undertone = magentaRatio >= 0.65 ? PURPLE : BLUE;
+		} else if (magentaRatio < 0.55) {
+			undertone = WARM;
+		} else if (magentaRatio < 0.65) {
+			undertone = NEUTRAL;
+		} else {
+			undertone = COOL;
 		}
-
-		undertone = Object.values(undertoneThreshold).find(
-			({ min, max }) => magentaRatio >= min && magentaRatio < max,
-		)?.label;
 	});
 
-	skinCategory += `${undertone ? ` ${undertone}` : ''}${isMuted ? ` ${MUTED}` : ''}${isOlive ? ` ${OLIVE}` : ''}`;
+	skinCategory += undertone ? ` ${undertone}` : '';
 
 	return skinCategory;
 };
